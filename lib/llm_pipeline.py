@@ -90,14 +90,17 @@ def run_segment_reduction(transcript_segment: str, idx: int) -> str:
                 try:
                     gemini = get_gemini_llm()
                     g_chain = segment_prompt | gemini
+                    # Force wait before slamming Gemini fallback
+                    time.sleep(5)
                     response_g = g_chain.invoke({"transcript": transcript_segment})
                     data_g = extract_json_content(response_g.content)
                     result_g = SegmentReduction.model_validate(data_g)
                     print(f"[MAP] Segment {idx} completed (Gemini Fallback)")
                     return result_g.model_dump_json(indent=2)
                 except Exception as e2:
-                    raise RuntimeError(f"Segment {idx} completely failed to map on both Groq and Gemini: {e2}")
-            time.sleep(3)
+                    raise RuntimeError(f"Segment {idx} completely failed to map on both models: {e2}")
+            print(f"[MAP] Throttling for {15*(attempt+1)} seconds to refresh API quotas...")
+            time.sleep(15 * (attempt + 1))
 
 
 def chunk_transcript(transcript: str, max_chars: int = MAX_CHARS_PER_CHUNK) -> List[str]:
@@ -230,16 +233,17 @@ def process_entire_transcript(raw_transcript: str) -> FinalMeetingMinutes:
     max_workers = int(os.getenv("MAX_CONCURRENT_REQUESTS", "2"))
     segment_results = [None] * len(chunks)
     
-    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
-        futures = {executor.submit(run_segment_reduction, chunk, i+1): i for i, chunk in enumerate(chunks)}
-        for future in concurrent.futures.as_completed(futures):
-            idx = futures[future]
-            try:
-                segment_results[idx] = future.result()
-            except Exception as e:
-                print(f"[INTERMEDIATE] Fatal error processing segment {idx+1}: {e}")
-                # Propagate exception fully to avoid hallucinated empty meetings
-                raise RuntimeError(f"Aborting pipeline: segment {idx+1} failed due to rate limits or API outage.")
+    # Run sequentially rather than in parallel to strictly avoid triggering Burst Rate limits on free tier accounts
+    for i, chunk in enumerate(chunks):
+        idx = i + 1
+        try:
+            # Introduce baseline buffer between segments to avoid fast-fire limits
+            if idx > 1:
+                time.sleep(5)
+            segment_results[i] = run_segment_reduction(chunk, idx)
+        except Exception as e:
+            print(f"[INTERMEDIATE] Fatal error processing segment {idx}: {e}")
+            raise RuntimeError(str(e))
                 
     valid_results = [res for res in segment_results if res]
     if not valid_results:
