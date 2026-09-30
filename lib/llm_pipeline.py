@@ -24,19 +24,24 @@ class FinalMeetingMinutes(BaseModel):
 
 # Prompt for intermediate segments (reduction/map)
 segment_prompt = ChatPromptTemplate.from_messages([
-    ("system", "You are an expert transcriber. Reduce this transcript segment into compact structured information without losing details. Never invent information."),
+    ("system", "You are an expert transcriber. Reduce this transcript segment into compact structured information without losing details. Never invent information.\n\nReturn ONLY valid JSON matching this schema:\n{{\n  \"key_points\": [\"...\"],\n  \"decisions\": [\"...\"],\n  \"action_items\": [\"...\"],\n  \"open_questions\": [\"...\"],\n  \"important_context\": [\"...\"]\n}}\n\nDo not use Markdown. Do not wrap the JSON in ```json. Do not add explanations before or after the JSON."),
     ("human", "{transcript}")
 ])
 
 # Prompt for merging/reducing structured contexts
 reduce_prompt = ChatPromptTemplate.from_messages([
-    ("system", "Merge these multiple structured meeting segments into one compacted structured summary. Remove exact duplicates, merge related items (key points, action items, decisions), preserve specific deadlines and owners, discard conversational fluff. Never invent information."),
+    ("system", "Merge these multiple structured meeting segments into one compacted structured summary. Remove exact duplicates, merge related items, preserve specific deadlines and owners, discard conversational fluff. Never invent information.\n\nReturn ONLY valid JSON matching this schema:\n{{\n  \"key_points\": [\"...\"],\n  \"decisions\": [\"...\"],\n  \"action_items\": [\"...\"],\n  \"open_questions\": [\"...\"],\n  \"important_context\": [\"...\"]\n}}\n\nDo not use Markdown. Do not wrap the JSON in ```json. Do not add explanations before or after the JSON."),
     ("human", "{summaries}")
 ])
 
 # Prompt for final synthesis
 final_prompt = ChatPromptTemplate.from_messages([
-    ("system", "You are an executive assistant. Convert this structured reduced context into a final cohesive Minutes of Meeting document. KEEP ALL actionable tasks and decisions. Never invent information."),
+    ("system", "You are an executive assistant. Convert this structured reduced context into a final cohesive Minutes of Meeting document. KEEP ALL actionable tasks and decisions. Never invent information.\n\nReturn ONLY valid JSON matching this schema:\n{{\n  \"summary\": \"...\",\n  \"key_points\": [\"...\"],\n  \"decisions\": [\n    {{\"decision\": \"...\", \"context\": \"...\"}}\n  ],\n  \"action_items\": [\n    {{\"task\": \"...\", \"owner\": \"...\", \"deadline\": \"...\"}}\n  ],\n  \"next_meeting_scheduled\": \"... or null\"\n}}\n\nDo not use Markdown. Do not wrap the JSON in ```json. Do not add explanations before or after the JSON."),
+    ("human", "Historical Meeting Context:\n{context}\n\nReduced Context:\n{reduced_context}")
+])
+
+final_retry_prompt = ChatPromptTemplate.from_messages([
+    ("system", "Your previous response was not valid JSON. Return ONLY valid JSON matching this schema:\n{{\n  \"summary\": \"...\",\n  \"key_points\": [\"...\"],\n  \"decisions\": [\n    {{\"decision\": \"...\", \"context\": \"...\"}}\n  ],\n  \"action_items\": [\n    {{\"task\": \"...\", \"owner\": \"...\", \"deadline\": \"...\"}}\n  ],\n  \"next_meeting_scheduled\": \"... or null\"\n}}\n\nDo not use Markdown. Do not wrap the JSON in ```json. Do not add explanations before or after the JSON."),
     ("human", "Historical Meeting Context:\n{context}\n\nReduced Context:\n{reduced_context}")
 ])
 
@@ -51,13 +56,36 @@ def get_groq_llm():
 def get_gemini_llm():
     return init_chat_model("gemini-3.5-flash", model_provider="google_genai")
 
+def extract_json_content(content) -> dict:
+    if isinstance(content, list):
+        # Some SDK versions return list of content blocks
+        content = " ".join([str(c.get("text", c)) if isinstance(c, dict) else str(c) for c in content])
+        
+    raw = str(content).strip()
+    if raw.startswith("```json"):
+        raw = raw[7:]
+    elif raw.startswith("```"):
+        raw = raw[3:]
+    if raw.endswith("```"):
+        raw = raw[:-3]
+    raw = raw.strip()
+    return json.loads(raw)
+
 def run_segment_reduction(transcript_segment: str, idx: int) -> str:
     print(f"[MAP] Starting segment {idx}")
     llm = get_groq_llm()
-    chain = segment_prompt | llm.with_structured_output(SegmentReduction)
-    result = chain.invoke({"transcript": transcript_segment})
-    print(f"[MAP] Segment {idx} completed")
-    return result.model_dump_json(indent=2)
+    chain = segment_prompt | llm
+    response = chain.invoke({"transcript": transcript_segment})
+    
+    try:
+        data = extract_json_content(response.content)
+        result = SegmentReduction.model_validate(data)
+        print(f"[MAP] Segment {idx} completed")
+        return result.model_dump_json(indent=2)
+    except Exception as e:
+        print(f"[MAP] Segment {idx} extraction failed: {e}")
+        # Return fallback empty state so reduction survives
+        return SegmentReduction().model_dump_json(indent=2)
 
 def chunk_transcript(transcript: str, max_chars: int = MAX_CHARS_PER_CHUNK) -> List[str]:
     splitter = RecursiveCharacterTextSplitter(
@@ -72,9 +100,16 @@ def reduce_structures(json_structures: List[str]) -> str:
     print(f"[REDUCE] Raw intermediate size: {len(merged_text)} characters")
     
     llm = get_groq_llm()
-    chain = reduce_prompt | llm.with_structured_output(SegmentReduction)
-    result = chain.invoke({"summaries": merged_text})
-    reduced = result.model_dump_json(indent=2)
+    chain = reduce_prompt | llm
+    response = chain.invoke({"summaries": merged_text})
+    
+    try:
+        data = extract_json_content(response.content)
+        result = SegmentReduction.model_validate(data)
+        reduced = result.model_dump_json(indent=2)
+    except Exception as e:
+        print(f"[REDUCE] Extraction failed: {e}")
+        reduced = SegmentReduction().model_dump_json(indent=2)
     
     print(f"[REDUCE] Reduced context size: {len(reduced)} characters")
     return reduced
@@ -98,12 +133,10 @@ def recursive_reduce(json_structures: List[str]) -> str:
     
     return reduce_structures([left_reduced, right_reduced])
 
-def validate_final_json(model_result) -> bool:
+def validate_final_json(data: dict) -> bool:
     try:
-        data = model_result.model_dump()
-        if not data.get("summary"):
-            return False
-        if not isinstance(data.get("action_items"), list):
+        m = FinalMeetingMinutes.model_validate(data)
+        if not m.summary:
             return False
         return True
     except Exception:
@@ -114,39 +147,55 @@ def execute_final_synthesis(reduced_context: str) -> FinalMeetingMinutes:
     print(f"[FINAL] Context characters: {len(reduced_context)}")
     print(f"[FINAL] Estimated tokens: ~{len(reduced_context) // 4}")
     
-    # Try Gemini Primary with Retry
+    # Primary: Gemini
+    gemini = get_gemini_llm()
+    chain = final_prompt | gemini
+    retry_chain = final_retry_prompt | gemini
+    
+    print("[FINAL] Gemini request started")
     for attempt in range(2):
-        print(f"[FINAL] Gemini request started (Attempt {attempt+1}/2)")
         try:
-            gemini = get_gemini_llm()
-            chain = final_prompt | gemini.with_structured_output(FinalMeetingMinutes)
-            final_result = chain.invoke({"context": historical_context, "reduced_context": reduced_context})
-            
-            if validate_final_json(final_result):
-                print("[FINAL] Gemini JSON validation: PASS")
-                return final_result
+            if attempt == 0:
+                response = chain.invoke({"context": historical_context, "reduced_context": reduced_context})
             else:
-                print(f"[FINAL] Gemini JSON validation: FAIL (Attempt {attempt+1})")
+                print("[FINAL] Gemini retry 1/1")
+                response = retry_chain.invoke({"context": historical_context, "reduced_context": reduced_context})
+                
+            print(f"[FINAL] Gemini raw response received (Attempt {attempt+1})")
+            data = extract_json_content(response.content)
+            
+            if validate_final_json(data):
+                print("[FINAL] Gemini JSON validation: PASS")
+                return FinalMeetingMinutes.model_validate(data)
+            else:
+                print("[FINAL] Gemini JSON validation: FAIL")
         except Exception as e:
-            print(f"[FINAL] Gemini status failed: {e}")
+            print(f"[FINAL] Gemini failed: {e}")
         
-        time.sleep(2)
-        
-    print("[FINAL] Gemini completely failed. Falling back to Groq")
-    try:
-        groq = get_groq_llm()
-        chain = final_prompt | groq.with_structured_output(FinalMeetingMinutes)
-        final_result = chain.invoke({"context": historical_context, "reduced_context": reduced_context})
-        
-        if validate_final_json(final_result):
-            print("[FINAL] Groq JSON validation: PASS")
-            return final_result
-        else:
-            print("[FINAL] Groq JSON validation: FAIL")
-            raise ValueError("Groq JSON schema invalid")
-    except Exception as e2:
-        print(f"[FINAL] Groq fallback failed: {e2}")
-        raise RuntimeError("Both primary and fallback LLMs failed to generate final synthetic MoM")
+    print("[FINAL] Starting Groq fallback")
+    groq = get_groq_llm()
+    g_chain = final_prompt | groq
+    g_retry = final_retry_prompt | groq
+    
+    for attempt in range(2):
+        try:
+            if attempt == 0:
+                response = g_chain.invoke({"context": historical_context, "reduced_context": reduced_context})
+            else:
+                response = g_retry.invoke({"context": historical_context, "reduced_context": reduced_context})
+                
+            print(f"[FINAL] Groq raw response received (Attempt {attempt+1})")
+            data = extract_json_content(response.content)
+            
+            if validate_final_json(data):
+                print("[FINAL] Groq JSON validation: PASS")
+                return FinalMeetingMinutes.model_validate(data)
+            else:
+                print("[FINAL] Groq JSON validation: FAIL")
+        except Exception as e2:
+            print(f"[FINAL] Groq fallback failed: {e2}")
+
+    raise RuntimeError("Both primary and fallback LLMs failed to generate valid JSON MoM")
 
 def process_entire_transcript(raw_transcript: str) -> FinalMeetingMinutes:
     chunks = chunk_transcript(raw_transcript)
