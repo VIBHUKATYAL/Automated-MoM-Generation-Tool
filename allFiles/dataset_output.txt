@@ -1,0 +1,563 @@
+Automated Minutes of Meeting Generator
+ Synthetic Training Dataset — Conversation → Structured MoM
+This dataset is designed for training and evaluating an automated meeting-minutes system. Each record contains a realistic meeting
+transcript and a reference annotation covering summary, decisions, action items, risks, and next-meeting information. Conversations
+intentionally include interruptions, informal language, follow-up questions, ambiguous context, and domain-specific terminology.
+Dataset size: 15 meetings across software, marketing, finance, sales, research, AI, security, HR, and other scenarios.
+
+M001 — Product Sprint Planning
+ Meeting type
+Software Development
+Participants
+Rahul (PM), Priya (Frontend), Aman (Backend), Neha (QA)
+Raw Meeting Transcript
+ Rahul: Okay, let's start with the sprint. The checkout redesign is still the priority.
+Priya: The cart page is done, but the mobile layout is breaking on smaller screens.
+Neha: I saw that too. Also, the coupon field throws an error when the code is expired.
+Aman: That's from the API. I can return a cleaner error response instead of a generic 500.
+Rahul: Good. Priya, can you finish the mobile fixes by Wednesday?
+Priya: Wednesday evening should be fine.
+Rahul: Aman, the API response?
+Aman: I'll push it tomorrow morning.
+Neha: Then I'll run regression after that.
+Rahul: Let's target a Friday release if QA is clean.
+Priya: One more thing—the design team changed the button colors.
+Rahul: Fine, use the latest Figma file. No need for another meeting for that.
+Neha: Should we include the analytics event for coupon failures?
+Aman: Yes, I'll add it with the API change.
+Rahul: Great. We'll review release status Thursday afternoon.
+Reference Annotation
+Summary: The sprint will focus on the checkout redesign. The team discussed mobile layout issues, expired coupon errors,
+analytics tracking, and QA before a potential Friday release.
+Decisions
+ Checkout redesign remains the sprint priority.
+ The team will target a Friday release if regression testing passes.
+ The latest Figma design will be used.
+Action Items
+ Priya — Fix mobile checkout layout by Wednesday evening.
+ Aman — Improve expired-coupon API error response by tomorrow morning.
+ Aman — Add analytics event for coupon failures.
+ Neha — Run regression testing after the backend change.
+Risks / Blockers
+ Mobile layout issues may affect release readiness.
+ Coupon error behavior currently produces a generic server error.
+Next Meeting / Follow-up: Thursday afternoon release-status review
+
+M002 — Marketing Campaign Review
+ Meeting type
+Marketing
+Participants
+Neha (Marketing Lead), Arjun (Content), Simran (Social), Karan (Designer)
+Raw Meeting Transcript
+ Neha: The October campaign is not getting enough engagement.
+Simran: Reels are doing better than static posts. The last three reels got almost twice the reach.
+Arjun: Then I suggest five reels a week instead of three.
+Karan: I can support that, but I need scripts at least two days earlier.
+Neha: Agreed. Arjun, send scripts every Monday and Thursday.
+Arjun: Okay.
+Simran: What about influencers? We still haven't contacted anyone.
+Neha: We need two collaborations before the end of the month.
+Karan: Should the influencer creatives use the same campaign identity?
+Neha: Yes, but let them keep their own tone.
+Simran: I'll shortlist ten creators by Friday.
+Arjun: And I'll prepare the first batch of scripts tomorrow.
+Neha: Good. We'll measure reach, saves, and profile visits—not just likes.
+Simran: I'll add those to the weekly dashboard.
+Reference Annotation
+Summary: The marketing team reviewed weak October engagement and agreed to increase short-form video output, pursue
+influencer collaborations, and track deeper engagement metrics.
+Decisions
+ Increase reels from three to five per week.
+ Complete two influencer collaborations during October.
+ Measure reach, saves, and profile visits in addition to likes.
+Action Items
+ Arjun — Send scripts every Monday and Thursday.
+ Arjun — Prepare the first batch of scripts tomorrow.
+ Simran — Shortlist ten influencers by Friday.
+ Simran — Add reach, saves, and profile visits to the weekly dashboard.
+Risks / Blockers
+ Higher reel frequency requires earlier script delivery.
+ Influencer outreach has not started yet.
+Next Meeting / Follow-up: Weekly marketing review
+
+M003 — Database Migration Planning
+ Meeting type
+Engineering / Infrastructure
+Participants
+Ananya (Engineering Manager), Dev (Backend), Karan (DevOps), Meera (QA)
+Raw Meeting Transcript
+ Ananya: We need to finalize the production migration plan today.
+Dev: The migration itself should take around three hours.
+Karan: Traffic is lowest Saturday night, so that's the safest window.
+Meera: What happens if the migration fails halfway?
+Dev: We restore the snapshot and roll back the application schema.
+Karan: I'll verify that the backup is usable before we start.
+Ananya: Good. Who owns monitoring?
+Dev: I do.
+Ananya: And rollback execution?
+Karan: I'll handle infrastructure rollback. Dev handles schema rollback.
+Meera: I'll run smoke tests immediately after the migration.
+Ananya: Let's freeze deployments after Friday 6 PM.
+Dev: Fine.
+Ananya: We need a written rollback checklist before Saturday.
+Karan: I'll put that together by Friday afternoon.
+Reference Annotation
+Summary: The team finalized a Saturday-night production database migration with backup verification, monitoring, smoke testing,
+and a documented rollback procedure.
+Decisions
+ Migration will occur Saturday night during the lowest-traffic period.
+ Deployments will be frozen after Friday 6 PM.
+ Rollback responsibilities are split between infrastructure and schema changes.
+Action Items
+ Karan — Verify the production backup before migration.
+ Dev — Monitor the migration.
+ Karan — Handle infrastructure rollback if required.
+ Dev — Handle schema rollback if required.
+ Meera — Run post-migration smoke tests.
+ Karan — Prepare the rollback checklist by Friday afternoon.
+Risks / Blockers
+ Migration failure could require rollback.
+ The migration is estimated at three hours and may affect availability if unexpected issues occur.
+Next Meeting / Follow-up: Migration execution Saturday night
+
+M004 — Sales Pipeline Meeting
+ Meeting type
+Sales
+Participants
+Rohit (Sales Lead), Pooja (Enterprise Sales), Vikram (Account Executive), Manager
+Raw Meeting Transcript
+ Manager: Where are we on the quarterly target?
+Rohit: We're at 82 percent.
+Pooja: ABC Corp is the closest deal. Procurement approved the commercial terms.
+Vikram: Delta Systems is waiting for their security review.
+Manager: Expected closure dates?
+Pooja: ABC could close this week.
+Vikram: Delta probably needs another two weeks.
+Manager: Fine. Prioritize ABC and don't let Delta stall.
+Rohit: I'll send a pipeline update Friday.
+Pooja: I need legal to review the final contract.
+Manager: Send it today.
+Vikram: I'll schedule a security-review call with Delta.
+Manager: Good. Anything else?
+Rohit: The smaller SMB pipeline is weak.
+Manager: Let's discuss that next week. Focus on the enterprise deals for now.
+Reference Annotation
+Summary: Sales is at 82% of the quarterly target, with ABC Corp and Delta Systems as the main enterprise opportunities. The team
+will prioritize these deals while monitoring the weaker SMB pipeline.
+Decisions
+ Prioritize ABC Corp and Delta Systems.
+ Defer the SMB pipeline discussion until next week.
+Action Items
+ Pooja — Send the final ABC contract to legal today.
+ Vikram — Schedule a security-review call with Delta Systems.
+ Rohit — Send a pipeline update Friday.
+Risks / Blockers
+ Delta Systems is blocked by a security review.
+ The SMB pipeline is currently weak.
+Next Meeting / Follow-up: SMB pipeline discussion next week
+
+M005 — Customer Support Escalation
+ Meeting type
+Customer Support
+Participants
+Aisha (Support Lead), Mohit (Support), Sara (Engineering), Customer Success
+Raw Meeting Transcript
+ Aisha: We have a cluster of complaints about duplicate charges.
+Mohit: I have six tickets from yesterday alone.
+Sara: Are these actual duplicate charges or duplicate notifications?
+Mohit: Two are definitely actual charges. The others look like notification retries.
+Sara: Then I need transaction IDs for the two confirmed cases.
+Aisha: I'll send those after this call.
+Customer Success: One enterprise customer is threatening to pause renewal.
+Aisha: That's urgent. Mohit, call them today.
+Mohit: I'll do it within the next two hours.
+Sara: I'll check the payment-service logs once I have the IDs.
+Aisha: We also need a temporary macro for support agents so they don't promise refunds before verification.
+Customer Success: I'll draft the wording.
+Sara: If this is a retry bug, we should disable the affected worker.
+Aisha: Only after Engineering confirms it.
+Sara: Agreed.
+Reference Annotation
+Summary: Support escalated reports of duplicate charges. Engineering will investigate confirmed cases, while Support and
+Customer Success handle affected customers and interim communication.
+Decisions
+ Refunds should not be promised before transaction verification.
+ The affected payment worker will only be disabled after Engineering confirms a retry-related defect.
+Action Items
+ Aisha — Send confirmed transaction IDs to Engineering.
+ Mohit — Contact the enterprise customer within two hours.
+ Sara — Investigate payment-service logs after receiving transaction IDs.
+ Customer Success — Draft a temporary support response macro.
+Risks / Blockers
+ Potential duplicate-charge defect could affect renewals.
+ Some reports may be notification duplicates rather than actual charges.
+Next Meeting / Follow-up: Engineering investigation after transaction IDs are shared
+
+M006 — University Project Meeting
+ Meeting type
+Academic Project
+Participants
+Vibhu (Team Lead), Riya (ML), Aditya (Backend), Naman (Frontend), Faculty Mentor
+Raw Meeting Transcript
+ Vibhu: We need the first working prototype before the next review.
+Riya: The summarization model works, but the output is sometimes too long.
+Faculty Mentor: Then define an evaluation metric for summary quality.
+Riya: We can use ROUGE, but I also want a human evaluation score.
+Aditya: The backend API is ready except authentication.
+Naman: Frontend has the upload screen and transcript view.
+Vibhu: What about the minutes format?
+Naman: I can show summary, decisions, and action items separately.
+Faculty Mentor: Add speaker names and deadlines too.
+Aditya: I'll finish authentication by Friday.
+Riya: I'll create the evaluation dataset by Sunday.
+Naman: I'll integrate the structured response after the API is finalized.
+Vibhu: Let's have everything ready for Monday's demonstration.
+Faculty Mentor: Make sure the dataset contains messy conversations, not only clean examples.
+Reference Annotation
+Summary: The academic team reviewed an automated meeting-minutes prototype and agreed to evaluate summaries using
+ROUGE plus human assessment while expanding the output structure and dataset realism.
+Decisions
+ Evaluate summaries using ROUGE and human evaluation.
+ MoM output will include summary, decisions, action items, speaker names, and deadlines.
+ The dataset must include realistic, messy conversations.
+Action Items
+ Aditya — Complete backend authentication by Friday.
+ Riya — Create the evaluation dataset by Sunday.
+ Naman — Integrate structured MoM output after API finalization.
+ Vibhu — Coordinate the Monday demonstration.
+Risks / Blockers
+ Model summaries may be excessively long.
+ A clean-only dataset may not represent real meetings.
+Next Meeting / Follow-up: Monday demonstration
+
+M007 — Hiring Interview Calibration
+ Meeting type
+Human Resources
+Participants
+HR Lead, Priya (Engineering), Rahul (Engineering), Recruiter
+Raw Meeting Transcript
+ HR Lead: We need consistency across technical interviews.
+Priya: Some interviewers are spending too long on the first coding question.
+Rahul: I suggest a fixed 35-minute coding section.
+Recruiter: What about candidates who finish early?
+Rahul: Give them an extension problem, but don't change the scoring rubric.
+Priya: We should also add a system-design question for senior candidates.
+HR Lead: Agreed, but not for entry-level candidates.
+Recruiter: I'll update the interview guide.
+Priya: We need interviewer training before the new rubric goes live.
+Rahul: I can run one training session next Tuesday.
+HR Lead: Good. Let's pilot the rubric with five interviews first.
+Recruiter: I'll select the pilot candidates.
+HR Lead: We'll review the results after the pilot.
+Reference Annotation
+Summary: The hiring team discussed standardizing technical interviews through fixed coding time, a consistent scoring rubric,
+role-specific system design questions, and a pilot.
+Decisions
+ Use a fixed 35-minute coding section.
+ Keep the scoring rubric consistent even when extension problems are used.
+ Add system-design questions for senior candidates only.
+ Pilot the revised rubric with five interviews.
+Action Items
+ Recruiter — Update the interview guide.
+ Priya — Run interviewer training next Tuesday.
+ Recruiter — Select five pilot candidates.
+Risks / Blockers
+ Inconsistent interviewer behavior may affect candidate comparisons.
+ The revised rubric needs validation through the pilot.
+Next Meeting / Follow-up: Pilot review after five interviews
+
+M008 — Budget Planning Meeting
+ Meeting type
+Finance
+Participants
+CFO, Finance Manager, Operations Lead, Product Lead
+Raw Meeting Transcript
+ CFO: We need to reduce discretionary spending for the next quarter.
+Finance Manager: Current discretionary spend is about 18 lakh per month.
+Operations Lead: Which categories are easiest to reduce?
+Finance Manager: Travel and external consulting.
+Product Lead: We have two consultants supporting the migration.
+CFO: Keep the migration consultant until the project reaches production.
+Product Lead: That's expected in six weeks.
+Operations Lead: Can we reduce travel by 25 percent?
+Finance Manager: Yes, if we make client visits exception-based.
+CFO: Do that.
+Product Lead: We also have a planned team offsite.
+CFO: Postpone it to the following quarter.
+Finance Manager: I'll circulate the revised budget tomorrow.
+Operations Lead: I'll update the travel policy.
+Reference Annotation
+Summary: Finance reviewed discretionary spending and agreed to reduce travel, postpone the team offsite, and retain migration
+consulting support until production.
+Decisions
+ Reduce travel spending by approximately 25% through exception-based approvals.
+ Postpone the team offsite to the following quarter.
+ Retain migration consulting support until production.
+Action Items
+ Finance Manager — Circulate revised budget tomorrow.
+ Operations Lead — Update the travel policy.
+Risks / Blockers
+ Migration costs may remain elevated for six weeks.
+ Travel reductions depend on effective exception handling.
+Next Meeting / Follow-up: Budget review after revised forecast
+
+M009 — Website Launch Readiness
+ Meeting type
+Product Launch
+Participants
+Product Manager, Engineering Lead, QA Lead, Marketing Lead
+Raw Meeting Transcript
+ Product Manager: Are we still comfortable launching Thursday?
+QA Lead: The main checkout flow is green, but Safari has one visual issue.
+Engineering Lead: It's cosmetic and doesn't block payment.
+Marketing Lead: Are analytics events verified?
+Engineering Lead: Purchase and signup are verified. Referral events are not.
+Product Manager: Can referral tracking be fixed before Wednesday?
+Engineering Lead: Yes, I'll patch it tomorrow.
+QA Lead: I'll retest Safari and referral events after the patch.
+Marketing Lead: We already scheduled the announcement for Thursday morning.
+Product Manager: Keep it scheduled for now.
+QA Lead: We need a final go/no-go Wednesday evening.
+Product Manager: Agreed.
+Marketing Lead: I'll prepare a backup announcement in case the launch moves.
+Engineering Lead: Good.
+Reference Annotation
+Summary: The website remains on track for a Thursday launch, pending a Safari visual issue and referral analytics fix. A final
+go/no-go review is scheduled for Wednesday evening.
+Decisions
+ Keep the Thursday launch and announcement scheduled for now.
+ Conduct a final go/no-go review Wednesday evening.
+Action Items
+ Engineering Lead — Fix referral analytics tomorrow.
+ QA Lead — Retest Safari and referral tracking after the patch.
+ Marketing Lead — Prepare a backup announcement.
+Risks / Blockers
+ Referral analytics is not yet verified.
+ A Safari visual defect remains open.
+Next Meeting / Follow-up: Wednesday evening go/no-go review
+
+M010 — Research Literature Review
+ Meeting type
+Research
+Participants
+Professor, Ananya, Dev, Rohan
+Raw Meeting Transcript
+ Professor: We need to narrow the literature review.
+Ananya: There are too many papers on generic summarization.
+Rohan: We should focus on meeting summarization and dialogue structure.
+Dev: I found papers using extractive and abstractive methods.
+Professor: Separate them in the literature matrix.
+Ananya: Should we include speech recognition papers?
+Professor: Only where transcription quality directly affects summarization.
+Rohan: I'll create categories for ASR, dialogue segmentation, summarization, and evaluation.
+Dev: I'll collect datasets and note licensing restrictions.
+Professor: Good. Don't mix benchmark results from different datasets without explaining the difference.
+Ananya: I'll write the comparison section.
+Professor: First draft by Friday.
+Rohan: And the matrix by Wednesday.
+Reference Annotation
+Summary: The research team narrowed its literature review to meeting summarization and related dialogue-processing
+components, with separate treatment of ASR, segmentation, summarization, evaluation, datasets, and licensing.
+Decisions
+ Focus the review on meeting summarization and dialogue structure.
+ Include speech-recognition work only when transcription quality directly affects summarization.
+ Separate research categories in the literature matrix.
+Action Items
+ Rohan — Create literature categories and matrix by Wednesday.
+ Dev — Collect datasets and document licensing restrictions.
+ Ananya — Write the comparison section by Friday.
+Risks / Blockers
+ Benchmark results from different datasets may not be directly comparable.
+ Dataset licensing may restrict project use.
+Next Meeting / Follow-up: Literature matrix review Wednesday
+
+M011 — Mobile App Incident Review
+ Meeting type
+Incident Response
+Participants
+Incident Lead, Sara (Backend), Karan (SRE), QA
+Raw Meeting Transcript
+ Incident Lead: Login failures peaked between 10:10 and 10:35.
+Sara: The authentication token service started returning expired-token responses.
+Karan: We saw elevated latency on the token refresh endpoint.
+QA: Was there a deployment at that time?
+Sara: Yes, version 4.8 went out at 10:05.
+Incident Lead: Roll back?
+Sara: The rollback restored login immediately.
+Karan: We should still identify why refresh latency increased.
+Incident Lead: Agreed. Keep the incident open.
+QA: I'll reproduce the issue against the 4.8 build.
+Sara: I'll inspect the token-service changes.
+Karan: I'll compare latency metrics before and after deployment.
+Incident Lead: Initial incident report by tomorrow noon.
+Reference Annotation
+Summary: A deployment caused elevated token-refresh latency and login failures. Rolling back version 4.8 restored login, but the
+underlying latency cause remains under investigation.
+Decisions
+ Keep the incident open until the token-refresh latency cause is identified.
+ Use rollback as the immediate recovery mechanism for the affected release.
+Action Items
+ QA — Reproduce the issue against version 4.8.
+ Sara — Inspect token-service changes.
+ Karan — Compare latency metrics before and after deployment.
+ Incident Lead — Prepare the initial incident report by tomorrow noon.
+Risks / Blockers
+ The root cause of token-refresh latency remains unresolved.
+ A future redeployment could reproduce the incident if the cause is not identified.
+Next Meeting / Follow-up: Incident review after root-cause analysis
+
+M012 — E-commerce Recommendation Project
+ Meeting type
+AI / E-commerce
+Participants
+Project Lead, ML Engineer, Backend Engineer, Data Engineer
+Raw Meeting Transcript
+ Project Lead: The recommendation prototype is returning products, but the explanations are weak.
+ML Engineer: Right now we're mostly matching keywords.
+Data Engineer: We can enrich the dataset with price, rating, reviews, and product attributes.
+Backend Engineer: Can we also collect current prices from multiple sites?
+Project Lead: Yes, but we need to handle changing availability.
+ML Engineer: Then the model should distinguish product relevance from price value.
+Data Engineer: I'll design the schema for product snapshots.
+Backend Engineer: I'll expose an API that returns the latest snapshot.
+ML Engineer: I can build a ranking score using relevance, price, rating, and sentiment.
+Project Lead: Good. Don't make the ranking purely price-based.
+Data Engineer: We also need timestamps so stale prices aren't treated as current.
+Project Lead: Exactly. First prototype with ten thousand product records.
+Backend Engineer: I'll have the API ready Friday.
+Data Engineer: Dataset schema by Wednesday.
+ML Engineer: Initial ranking experiment by Monday.
+Reference Annotation
+Summary: The team plans to evolve the product recommendation system from keyword matching toward multi-factor ranking using
+relevance, price, ratings, reviews, sentiment, and freshness.
+Decisions
+ Separate product relevance from price value.
+ Use timestamped product snapshots to handle changing information.
+ Ranking will combine multiple factors rather than relying only on price.
+ Initial prototype will use approximately 10,000 product records.
+Action Items
+ Data Engineer — Design product snapshot schema by Wednesday.
+ Backend Engineer — Build latest-snapshot API by Friday.
+ ML Engineer — Run initial ranking experiment by Monday.
+Risks / Blockers
+ Product availability and prices change over time.
+ Stale snapshots could produce misleading recommendations.
+ Pure keyword matching may not capture product value.
+Next Meeting / Follow-up: Ranking experiment review Monday
+
+M013 — Remote Team Retrospective
+ Meeting type
+Team Retrospective
+Participants
+Team Lead, Frontend Engineer, Backend Engineer, QA Engineer, Designer
+Raw Meeting Transcript
+ Team Lead: Let's start with what slowed us down this sprint.
+Frontend: Design changes came after implementation had already started.
+Designer: Fair point. I was waiting for product feedback.
+Backend: I also had to wait for API requirements twice.
+QA: Testing started late because the staging environment was unstable.
+Team Lead: What should we change?
+Designer: Freeze major designs one day before development.
+Backend: And API requirements should be written before implementation.
+QA: I want staging checks before every sprint demo.
+Team Lead: Let's adopt all three.
+Frontend: Can we also keep a shared decision log?
+Team Lead: Yes. I'll create one today.
+Designer: I'll add design status to the sprint board.
+QA: I'll document staging checks.
+Team Lead: We'll review whether this helped in the next retrospective.
+Reference Annotation
+Summary: The retrospective identified late design changes, incomplete API requirements, and unstable staging as major sources of
+delay. The team agreed on process changes and a shared decision log.
+Decisions
+ Freeze major designs one day before development.
+ Document API requirements before implementation.
+ Run staging checks before each sprint demo.
+ Maintain a shared decision log.
+Action Items
+ Team Lead — Create shared decision log today.
+ Designer — Add design status to sprint board.
+ QA — Document staging checks.
+Risks / Blockers
+ Late requirements and unstable staging may continue causing delays if the new process is not followed.
+Next Meeting / Follow-up: Next sprint retrospective
+
+M014 — Security Review Meeting
+ Meeting type
+Security
+Participants
+Security Lead, Backend Lead, DevOps, Product Manager
+Raw Meeting Transcript
+ Security Lead: We found two medium-severity findings in the API review.
+Backend Lead: One is excessive error detail in production responses.
+DevOps: The other is an overly broad service-account permission.
+Product Manager: Are either of these blockers for release?
+Security Lead: Not if the fixes are deployed before production.
+Backend Lead: I'll remove sensitive error details today.
+DevOps: I'll reduce the service-account permissions tomorrow.
+Security Lead: I also want logs checked after deployment.
+DevOps: I can verify that.
+Product Manager: Do we need another full security review?
+Security Lead: No, a targeted verification is enough.
+Backend Lead: I'll provide the changed API examples.
+Security Lead: Good. Verification Thursday morning.
+Reference Annotation
+Summary: Security identified two medium-severity API issues involving error disclosure and excessive service-account permissions.
+Both must be fixed before production, followed by targeted verification.
+Decisions
+ Both security findings must be fixed before production.
+ A targeted verification review is sufficient; a full review is not required.
+Action Items
+ Backend Lead — Remove sensitive error details today.
+ DevOps — Reduce service-account permissions tomorrow.
+ DevOps — Verify production logs after deployment.
+ Backend Lead — Provide updated API examples.
+ Security Lead — Perform targeted verification Thursday morning.
+Risks / Blockers
+ Production release depends on remediation of both findings.
+ Incorrect permission changes could affect service functionality.
+Next Meeting / Follow-up: Targeted security verification Thursday morning
+
+M015 — Quarterly Strategy Discussion
+ Meeting type
+Business Strategy
+Participants
+CEO, COO, Product Head, Sales Head, Finance Head
+Raw Meeting Transcript
+ CEO: Revenue is growing, but the enterprise segment is taking longer to close.
+Sales Head: Average enterprise cycle is now around 75 days.
+Finance Head: That affects cash planning.
+Product Head: We could package a smaller enterprise pilot.
+COO: Would that reduce implementation time?
+Product Head: Yes, because the pilot uses fewer integrations.
+Sales Head: It could also lower the initial contract value.
+CEO: That's acceptable if conversion improves.
+Finance Head: We need a model showing pilot economics.
+COO: I'll coordinate with Product and Sales on the pilot process.
+Product Head: I'll define the pilot scope.
+Sales Head: I'll identify five prospects for a pilot.
+Finance Head: I'll model revenue and implementation costs.
+CEO: Bring the proposal to next Tuesday's leadership meeting.
+Reference Annotation
+Summary: Leadership discussed long enterprise sales cycles and agreed to evaluate a smaller enterprise pilot model, including its
+economics, scope, and target prospects.
+Decisions
+ Evaluate a smaller enterprise pilot with fewer integrations.
+ Prepare a proposal for the next Tuesday leadership meeting.
+Action Items
+ COO — Coordinate the pilot process with Product and Sales.
+ Product Head — Define pilot scope.
+ Sales Head — Identify five pilot prospects.
+ Finance Head — Model pilot revenue and implementation costs.
+Risks / Blockers
+ Smaller pilots may reduce initial contract value.
+ The proposed model may not materially shorten enterprise sales cycles.
+Next Meeting / Follow-up: Tuesday leadership meeting
+
+Recommended Training Format
+For supervised fine-tuning, a practical input/output pair can be formed from each meeting. Input: the raw transcript plus an instruction
+such as 'Generate concise meeting minutes.' Target: the structured reference annotation. For larger experiments, create several
+variants of each meeting with different levels of transcript noise, speaker interruptions, transcription errors, and different output
+formats.
+Suggested JSON fields: meeting_id, transcript, participants, summary, decisions, action_items, risks, next_meeting, minutes.
+

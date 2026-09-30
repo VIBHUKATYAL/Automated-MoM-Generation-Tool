@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Automated MoM Generator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  </head>
+  <body>
+    <div class="background-decorations">
+      <div class="decor-circle-1"></div>
+      <div class="decor-circle-2"></div>
+    </div>
+
+    <main class="app-container">
+      <header class="app-header">
+        <h1 class="page-title">Automated Minutes of Meeting</h1>
+        <p class="subtitle">
+          Generate structured meeting notes instantly from your transcript.
+        </p>
+      </header>
+
+      <section class="hero-card glass-card">
+        <div class="context-label">New Meeting</div>
+        <h2 class="card-title">Meeting Transcript Input</h2>
+        <p class="card-desc">
+          Paste your meeting dialogue below, or upload an audio file to extract
+          key decisions and action items.
+        </p>
+
+        <textarea
+          id="transcript-input"
+          placeholder="e.g. Alex: Let's start with the Q3 launch timeline..."
+        ></textarea>
+
+        <div style="margin-top: 15px; margin-bottom: 20px">
+          <p class="card-desc" style="margin-bottom: 8px">
+            <b>OR</b> upload an audio recording:
+          </p>
+          <input
+            type="file"
+            id="audio-input"
+            accept="audio/*"
+            style="
+              width: 100%;
+              border: 1px solid rgba(255, 255, 255, 0.2);
+              padding: 10px;
+              border-radius: 8px;
+              color: var(--text-primary);
+              background: rgba(255, 255, 255, 0.05);
+              font-family: inherit;
+            "
+          />
+        </div>
+
+        <div class="actions">
+          <button id="generate-btn" class="primary-btn">
+            <i class="ph ph-magic-wand"></i> Generate MoM
+          </button>
+          <div id="loader" class="loader-hidden">Generating...</div>
+        </div>
+      </section>
+
+      <section id="results-container" class="results-hidden">
+        <div class="progress-section">
+          <p>Status: Complete</p>
+          <div class="progress-track">
+            <div class="progress-fill"></div>
+          </div>
+        </div>
+
+        <div
+          class="glass-card result-card"
+          id="refined-transcript-card"
+          style="display: none; margin-bottom: 20px"
+        >
+          <h3 class="section-title">Refined Transcript</h3>
+          <p
+            id="res-transcript"
+            class="body-text"
+            style="
+              white-space: pre-wrap;
+              font-size: 0.9em;
+              max-height: 200px;
+              overflow-y: auto;
+            "
+          ></p>
+        </div>
+
+        <div class="glass-card result-card">
+          <h3 class="section-title">Summary</h3>
+          <p id="res-summary" class="body-text"></p>
+        </div>
+
+        <div class="grid-2">
+          <div class="glass-card result-card">
+            <h3 class="section-title">Key Topics</h3>
+            <ul id="res-topics" class="item-list"></ul>
+          </div>
+          <div class="glass-card result-card">
+            <h3 class="section-title">Decisions Made</h3>
+            <ul id="res-decisions" class="item-list"></ul>
+          </div>
+        </div>
+
+        <div class="glass-card result-card action-card">
+          <div class="card-header">
+            <h3 class="section-title">Action Items</h3>
+          </div>
+          <ul id="res-actions" class="action-list"></ul>
+        </div>
+
+        <div class="glass-card result-card">
+          <h3 class="section-title">Open Questions</h3>
+          <ul id="res-questions" class="item-list"></ul>
+        </div>
+      </section>
+    </main>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+  </body>
+</html>
