@@ -4,8 +4,8 @@ from lib.llm_pipeline import process_entire_transcript
 
 app = Flask(__name__)
 
-@app.route('/', defaults={'path': ''})
-@app.route('/<path:path>', methods=['POST'])
+@app.route('/', defaults={'path': ''}, methods=['GET', 'POST', 'OPTIONS'])
+@app.route('/<path:path>', methods=['GET', 'POST', 'OPTIONS'])
 def generate_mom(path):
     data = request.json or {}
     meeting_id = data.get('id')

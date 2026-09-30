@@ -2,6 +2,9 @@ from werkzeug.serving import run_simple
 from werkzeug.middleware.dispatcher import DispatcherMiddleware
 import os
 import sys
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Ensure lib and api folders are in python path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))

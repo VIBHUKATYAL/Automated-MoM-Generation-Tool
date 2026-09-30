@@ -1,5 +1,36 @@
 document.addEventListener("DOMContentLoaded", () => {
     const generateBtn = document.getElementById("generate-btn");
+    const transcriptInput = document.getElementById("transcript-input");
+    const audioUpload = document.getElementById("audio-upload");
+    const fileName = document.getElementById("file-name");
+
+    function toggleGenerateBtn() {
+        const hasText = transcriptInput.value.trim().length > 0;
+        const hasFile = audioUpload.files.length > 0;
+        
+        if (hasText || hasFile) {
+            generateBtn.disabled = false;
+            generateBtn.style.opacity = "1";
+            generateBtn.style.cursor = "pointer";
+        } else {
+            generateBtn.disabled = true;
+            generateBtn.style.opacity = "0.7";
+            generateBtn.style.cursor = "not-allowed";
+        }
+    }
+
+    transcriptInput.addEventListener("input", toggleGenerateBtn);
+    audioUpload.addEventListener("change", (e) => {
+        if (e.target.files.length > 0) {
+            fileName.textContent = e.target.files[0].name;
+            transcriptInput.value = ""; 
+            transcriptInput.disabled = true; 
+        } else {
+            fileName.textContent = "";
+            transcriptInput.disabled = false;
+        }
+        toggleGenerateBtn();
+    });
     
     generateBtn.addEventListener("click", async (e) => {
         e.preventDefault();
@@ -19,7 +50,7 @@ async function generateMOM() {
     }
 
     loader.className = "loader";
-    loader.textContent = "Initiating Pipeline...";
+    loader.textContent = "Initiating Vercel Pipeline...";
     resultDiv.innerHTML = "";
 
     const formData = new FormData();
@@ -43,12 +74,13 @@ async function generateMOM() {
         const meetingId = data.meeting_id;
         if (!meetingId) throw new Error("Did not receive meeting ID");
 
-        loader.textContent = "Processing Audio on AssemblyAI. This may take 1-2 minutes...";
+        loader.textContent = "Processing Audio on AssemblyAI. (Takes about 1/3 of the audio length)...";
         let status = "transcribing";
         
         while (status === "transcribing" || status === "queued") {
-            await new Promise(r => setTimeout(r, 5000));
+            await new Promise(r => setTimeout(r, 6000));
             const pollRes = await fetch(`/api/meetings?id=${meetingId}`);
+            if (!pollRes.ok) continue;
             const pollData = await pollRes.json();
             
             if (pollData.error) throw new Error(pollData.error);
@@ -58,7 +90,7 @@ async function generateMOM() {
 
         if (status === "failed") throw new Error("Job failed during transcription phase");
 
-        loader.textContent = "Transcription successful. Starting Gemini/Groq Fallback Phase...";
+        loader.textContent = "Transcription successful! Dispatching to Gemini (Groq Fallback active)...";
         const genRes = await fetch("/api/generate_mom", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
