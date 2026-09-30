@@ -99,6 +99,18 @@ prompt = ChatPromptTemplate.from_messages([
     ( "human",human_prompt,),
 ])
 
+merge_system_prompt = """
+You are an expert executive assistant.
+You will be provided with several partial summaries of a large meeting.
+Your job is to merge all of them into a single, cohesive, final meeting minutes document.
+Ensure that ALL key topics, decisions, and action items from ALL partial summaries are merged together. Do NOT drop or ignore any information from the later summaries!
+"""
+
+merge_prompt = ChatPromptTemplate.from_messages([
+    ("system", merge_system_prompt),
+    ("human", human_prompt),
+])
+
 MAX_CHARS_PER_CHUNK = 6000
 
 def chunk_transcript(transcript: str, max_chars: int = MAX_CHARS_PER_CHUNK) -> List[str]:
@@ -167,12 +179,19 @@ def generate_minutes_stream(transcript: str, provider: str = PROVIDER):
     if len(chunks) == 1:
         final_result = partials[0]
     else:
-        merged_text = "\n\n".join(
-            f"Partial summary {i+1}:\n{p.model_dump_json(indent=2)}"
-            for i, p in enumerate(partials)
-        )
+        text_partials = []
+        for i, p in enumerate(partials):
+            block = f"--- Part {i+1} ---\n"
+            block += f"Title: {p.title}\n"
+            block += f"Summary: {p.summary}\n"
+            block += f"Topics: {', '.join(p.key_topics)}\n"
+            block += f"Decisions: {', '.join([d.decision for d in p.decisions])}\n"
+            block += f"Action Items: {', '.join([a.task for a in p.action_items])}"
+            text_partials.append(block)
+            
+        merged_text = "\n\n".join(text_partials)
         llm_final = build_llm(provider)
-        chain_final = prompt | llm_final.with_structured_output(MeetingMinutes)
+        chain_final = merge_prompt | llm_final.with_structured_output(MeetingMinutes)
         final_result = _generate_once(chain_final, merged_text)
         
     yield {"status": "completed", "result": final_result.model_dump()}
