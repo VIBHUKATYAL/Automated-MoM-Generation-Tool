@@ -45,8 +45,8 @@ final_retry_prompt = ChatPromptTemplate.from_messages([
     ("human", "Historical Meeting Context:\n{context}\n\nReduced Context:\n{reduced_context}")
 ])
 
-MAX_CHARS_PER_CHUNK = 12000 # Targeting 10-15 mins of speech
-REDUCE_THRESHOLD = 8000 # If combined json strings exceed 8k chars, trigger another reduce round
+MAX_CHARS_PER_CHUNK = 8000 # Targeting tighter bounds
+REDUCE_THRESHOLD = 4000 # More recursive steps to prevent Groq OSS overflow
 
 def get_groq_llm():
     keys = os.getenv("GROQ_API_KEY", "").split(",")
@@ -81,13 +81,22 @@ def run_segment_reduction(transcript_segment: str, idx: int) -> str:
             response = chain.invoke({"transcript": transcript_segment})
             data = extract_json_content(response.content)
             result = SegmentReduction.model_validate(data)
-            print(f"[MAP] Segment {idx} completed on try {attempt+1}")
+            print(f"[MAP] Segment {idx} completed on try {attempt+1} (Groq)")
             return result.model_dump_json(indent=2)
         except Exception as e:
-            print(f"[MAP] Segment {idx} extraction failed (Try {attempt+1}/3): {e}")
+            print(f"[MAP] Segment {idx} (Groq) extraction failed (Try {attempt+1}/3): {e}")
             if attempt == 2:
-                # Fatal failure after retries
-                raise RuntimeError(f"Segment {idx} completely failed to map.")
+                print(f"[MAP] Segment {idx} falling back to Gemini payload processing due to Groq outage.")
+                try:
+                    gemini = get_gemini_llm()
+                    g_chain = segment_prompt | gemini
+                    response_g = g_chain.invoke({"transcript": transcript_segment})
+                    data_g = extract_json_content(response_g.content)
+                    result_g = SegmentReduction.model_validate(data_g)
+                    print(f"[MAP] Segment {idx} completed (Gemini Fallback)")
+                    return result_g.model_dump_json(indent=2)
+                except Exception as e2:
+                    raise RuntimeError(f"Segment {idx} completely failed to map on both Groq and Gemini: {e2}")
             time.sleep(3)
 
 
@@ -105,18 +114,31 @@ def reduce_structures(json_structures: List[str]) -> str:
     
     llm = get_groq_llm()
     chain = reduce_prompt | llm
-    response = chain.invoke({"summaries": merged_text})
     
-    try:
-        data = extract_json_content(response.content)
-        result = SegmentReduction.model_validate(data)
-        reduced = result.model_dump_json(indent=2)
-    except Exception as e:
-        print(f"[REDUCE] Extraction failed: {e}")
-        reduced = SegmentReduction().model_dump_json(indent=2)
-    
-    print(f"[REDUCE] Reduced context size: {len(reduced)} characters")
-    return reduced
+    for attempt in range(3):
+        try:
+            response = chain.invoke({"summaries": merged_text})
+            data = extract_json_content(response.content)
+            result = SegmentReduction.model_validate(data)
+            reduced = result.model_dump_json(indent=2)
+            print(f"[REDUCE] Reduced context size (Try {attempt+1}): {len(reduced)} characters (Groq)")
+            return reduced
+        except Exception as e:
+            print(f"[REDUCE] Extraction failed (Try {attempt+1}/3): {e}")
+            if attempt == 2:
+                print("[REDUCE] Falling back to Gemini to squash final context payload.")
+                try:
+                    gemini = get_gemini_llm()
+                    g_chain = reduce_prompt | gemini
+                    response_g = g_chain.invoke({"summaries": merged_text})
+                    data_g = extract_json_content(response_g.content)
+                    result_g = SegmentReduction.model_validate(data_g)
+                    reduced_g = result_g.model_dump_json(indent=2)
+                    print(f"[REDUCE] Reduced context size: {len(reduced_g)} characters (Gemini Fallback)")
+                    return reduced_g
+                except Exception as e2:
+                    raise RuntimeError(f"REDUCE completely failed on both models: {e2}")
+            time.sleep(3)
 
 def recursive_reduce(json_structures: List[str]) -> str:
     if not json_structures:
