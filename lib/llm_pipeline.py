@@ -256,27 +256,90 @@ def process_entire_transcript(raw_transcript: str) -> FinalMeetingMinutes:
     # Final Generation
     return execute_final_synthesis(reduced_context)
 
-def process_single_shot_text(raw_transcript: str) -> FinalMeetingMinutes:
-    """Bypasses complex map-reduce for clean, raw text input using Gemini's huge context window."""
-    print(f"[SINGLE-SHOT] Generating on raw text of length {len(raw_transcript)}")
+# ---------------------------------------------------------
+# NATIVE JUPYTER NOTEBOOK IMPLEMENTATION FOR TEXT UPLOADS
+# ---------------------------------------------------------
+class NotebookActionItem(BaseModel):
+    task: str = Field(description="The action to be done")
+    owner: Optional[str] = Field(default=None, description="Person or team responsible, if stated in the transcript")
+    deadline: Optional[str] = Field(default=None, description="Due date or timeframe, if stated in the transcript")
+
+class NotebookDecision(BaseModel):
+    decision: str = Field(description="A decision that was made")
+    context: Optional[str] = Field(default=None, description="Brief context or reasoning behind the decision, if given")
+
+class NotebookMeetingMinutes(BaseModel):
+    title: str = Field(description="A short descriptive title for the meeting")
+    attendees: List[str] = Field(default_factory=list, description="Names mentioned as present, if identifiable from the transcript")
+    summary: str = Field(description="A concise 3-5 sentence summary of the meeting")
+    key_topics: List[str] = Field(description="Main topics discussed, as short bullet points")
+    decisions: List[NotebookDecision] = Field(default_factory=list, description="Decisions made during the meeting")
+    action_items: List[NotebookActionItem] = Field(default_factory=list, description="Concrete follow-up tasks")
+    open_questions: List[str] = Field(default_factory=list, description="Unresolved questions or items to follow up on")
+
+def _generate_once(transcript: str) -> NotebookMeetingMinutes:
     llm = get_gemini_llm()
-    structured_llm = llm.with_structured_output(FinalMeetingMinutes)
+    system_prompt = """
+    You are an assistant that writes accurate, concise meeting minutes from a transcript.
     
+    Rules:
+    - Use only information present in the transcript. Do not invent names, dates, or decisions.
+    - If attendees are not identifiable, return an empty list rather than guessing.
+    - Action items should be concrete and actionable. Include owner and deadline only if explicitly stated or clearly implied; otherwise leave them empty.
+    - Keep the summary factual and neutral in tone.
+    - List key topics as short phrases, not full sentences.
+    - Separate decisions (things agreed/resolved) from action items (things to be done).
+    - If nothing fits a field (e.g. no open questions), return an empty list for it.
+    """
+    human_prompt =  """
+    Meeting transcript:
+    {transcript}
+    
+    Generate the meeting minutes.
+    """
     prompt = ChatPromptTemplate.from_messages([
-        ("system", "You are an executive assistant. Analyze this meeting transcript and generate a structured summary. KEEP ALL actionable tasks and decisions. Never invent information."),
-        ("human", "Transcript:\n{transcript}")
+        ( "system",system_prompt,),
+        ( "human",human_prompt,),
     ])
     
+    structured_llm = llm.with_structured_output(NotebookMeetingMinutes)
     chain = prompt | structured_llm
     
-    try:
-        res = chain.invoke({"transcript": raw_transcript})
-        return res
-    except Exception as e:
-        print(f"[SINGLE-SHOT] Failed Gemini explicit generation: {e}")
-        # fallback to raw parsing if with_structured_output fails
-        fallback_chain = final_prompt | llm
-        fallback_res = fallback_chain.invoke({"context": "None provided", "reduced_context": raw_transcript})
-        data = extract_json_content(fallback_res.content)
-        return FinalMeetingMinutes.model_validate(data)
+    last_error = None
+    for attempt in range(1, 4):
+        try:
+            result = chain.invoke({"transcript": transcript})
+            if isinstance(result, dict):
+                result = NotebookMeetingMinutes.model_validate(result)
+            return result
+        except Exception as e:
+            last_error = e
+            print(f"Attempt {attempt} failed: {e}")
+            time.sleep(3)
+
+    raise RuntimeError(f"Minutes generation failed after 3 attempts: {last_error}")
+
+
+def process_single_shot_text(transcript: str) -> dict:
+    """Invokes the native Jupyter Notebook map-reduce chunking specifically mapped to Gemini for text generation."""
+    if not transcript.strip():
+        raise ValueError("Transcript is empty.")
+
+    chunks = chunk_transcript(transcript, max_chars=12000)
+
+    if len(chunks) == 1:
+        return _generate_once(chunks[0]).model_dump()
+
+    print(f"Transcript split into {len(chunks)} chunks; summarizing each...")
+    partials = []
+    for c in chunks:
+        partials.append(_generate_once(c))
+        time.sleep(3) # API safeguard
+
+    merged_text = "\n\n".join(
+        f"Partial summary {i+1}:\n{p.model_dump_json(indent=2)}"
+        for i, p in enumerate(partials)
+    )
+
+    return _generate_once(merged_text).model_dump()
 

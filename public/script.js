@@ -122,50 +122,88 @@ async function generateMOM() {
   }
 }
 
-function renderResults(result) {
-  if (!result) return;
+function renderResults(mom) {
+  if (!mom) return;
 
-  document.getElementById("results-container").className = "";
+  const resultsContainer = document.getElementById("results-container");
+  resultsContainer.className = "";
 
-  document.getElementById("res-summary").textContent = result.summary || "";
-
-  const topicsList = document.getElementById("res-topics");
-  topicsList.innerHTML = "";
-  if (result.key_points) {
-    result.key_points.forEach((k) => {
-      const li = document.createElement("li");
-      li.textContent = k;
-      topicsList.appendChild(li);
-    });
+  let html = "";
+  if (mom.title) {
+    html += `<div class="mb-4 border-b border-white/20 pb-2">
+                    <strong class="text-white text-xl font-bold">${mom.title}</strong>
+                 </div>`;
+  }
+  if (mom.attendees && mom.attendees.length > 0) {
+    html += `<div class="mb-4">
+                    <strong class="text-white text-lg">Attendees</strong>
+                    <p class="text-white/80 mt-1">${mom.attendees.join(", ")}</p>
+                 </div>`;
   }
 
-  const decisionsList = document.getElementById("res-decisions");
-  decisionsList.innerHTML = "";
-  if (result.decisions) {
-    result.decisions.forEach((d) => {
-      const li = document.createElement("li");
-      li.innerHTML = `<strong>${d.decision || ""}</strong>: ${d.context || ""}`;
-      decisionsList.appendChild(li);
+  // Build Summary
+  html += `<div class="mb-4">
+                <strong class="text-white text-lg">Summary</strong>
+                <p class="text-white/80 mt-1">${mom.summary}</p>
+             </div>`;
+
+  // Build Key Points / Topics
+  let kp = mom.key_topics || mom.key_points || [];
+  if (kp.length > 0) {
+    html += `<div class="mb-4">
+                    <strong class="text-white text-lg">Key Points</strong>
+                    <ul class="list-disc pl-5 mt-1 text-white/80">`;
+    kp.forEach((point) => {
+      html += `<li>${point}</li>`;
     });
+    html += `</ul></div>`;
   }
 
-  const actionsList = document.getElementById("res-actions");
-  actionsList.innerHTML = "";
-  if (result.action_items) {
-    result.action_items.forEach((a) => {
-      const li = document.createElement("li");
-      li.innerHTML = `<strong>${a.task || ""}</strong> - ${a.owner || "Unassigned"} (By: ${a.deadline || "No Date"})`;
-      actionsList.appendChild(li);
+  // Build Decisions
+  if (mom.decisions && mom.decisions.length > 0) {
+    html += `<div class="mb-4">
+                    <strong class="text-white text-lg">Decisions Made</strong>
+                    <ul class="list-disc pl-5 mt-1 text-white/80">`;
+    mom.decisions.forEach((d) => {
+      let text = d.decision;
+      if (d.context)
+        text += ` <span class="text-white/50 text-sm">(${d.context})</span>`;
+      html += `<li>${text}</li>`;
     });
+    html += `</ul></div>`;
   }
 
-  const qsList = document.getElementById("res-questions");
-  qsList.innerHTML = "";
-  if (result.open_questions) {
-    result.open_questions.forEach((q) => {
-      const li = document.createElement("li");
-      li.textContent = q;
-      qsList.appendChild(li);
+  // Build Action Items
+  if (mom.action_items && mom.action_items.length > 0) {
+    html += `<div class="mb-4">
+                    <strong class="text-white text-lg">Action Items</strong>
+                    <div class="mt-2 grid grid-cols-1 gap-2">`;
+    mom.action_items.forEach((a) => {
+      let task = a.task;
+      let owner = a.owner || "Unassigned";
+      let ded = a.deadline ? `Due: ${a.deadline}` : "No deadline";
+      html += `
+            <div class="bg-white/5 rounded-lg p-3 border border-white/10 flex flex-col md:flex-row md:items-center justify-between">
+                <span class="text-white/90">${task}</span>
+                <div class="mt-2 md:mt-0 flex flex-row gap-2">
+                    <span class="bg-[#121212] px-2 py-1 rounded text-xs text-white/60">${owner}</span>
+                    <span class="bg-[#121212] px-2 py-1 rounded text-xs text-[#00ff88]/80">${ded}</span>
+                </div>
+            </div>`;
     });
+    html += `</div></div>`;
   }
+
+  // Build Open Questions
+  if (mom.open_questions && mom.open_questions.length > 0) {
+    html += `<div class="mb-4">
+                    <strong class="text-white text-lg">Open Questions</strong>
+                    <ul class="list-disc pl-5 mt-1 text-white/80">`;
+    mom.open_questions.forEach((q) => {
+      html += `<li>${q}</li>`;
+    });
+    html += `</ul></div>`;
+  }
+
+  resultsContainer.innerHTML = html;
 }
