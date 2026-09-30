@@ -75,17 +75,21 @@ def run_segment_reduction(transcript_segment: str, idx: int) -> str:
     print(f"[MAP] Starting segment {idx}")
     llm = get_groq_llm()
     chain = segment_prompt | llm
-    response = chain.invoke({"transcript": transcript_segment})
     
-    try:
-        data = extract_json_content(response.content)
-        result = SegmentReduction.model_validate(data)
-        print(f"[MAP] Segment {idx} completed")
-        return result.model_dump_json(indent=2)
-    except Exception as e:
-        print(f"[MAP] Segment {idx} extraction failed: {e}")
-        # Return fallback empty state so reduction survives
-        return SegmentReduction().model_dump_json(indent=2)
+    for attempt in range(3):
+        try:
+            response = chain.invoke({"transcript": transcript_segment})
+            data = extract_json_content(response.content)
+            result = SegmentReduction.model_validate(data)
+            print(f"[MAP] Segment {idx} completed on try {attempt+1}")
+            return result.model_dump_json(indent=2)
+        except Exception as e:
+            print(f"[MAP] Segment {idx} extraction failed (Try {attempt+1}/3): {e}")
+            if attempt == 2:
+                # Fatal failure after retries
+                raise RuntimeError(f"Segment {idx} completely failed to map.")
+            time.sleep(3)
+
 
 def chunk_transcript(transcript: str, max_chars: int = MAX_CHARS_PER_CHUNK) -> List[str]:
     splitter = RecursiveCharacterTextSplitter(
@@ -211,10 +215,13 @@ def process_entire_transcript(raw_transcript: str) -> FinalMeetingMinutes:
             try:
                 segment_results[idx] = future.result()
             except Exception as e:
-                print(f"[INTERMEDIATE] Error processing segment {idx+1}: {e}")
-                segment_results[idx] = '{"error": "Failed to map segment"}'
+                print(f"[INTERMEDIATE] Fatal error processing segment {idx+1}: {e}")
+                # Propagate exception fully to avoid hallucinated empty meetings
+                raise RuntimeError(f"Aborting pipeline: segment {idx+1} failed due to rate limits or API outage.")
                 
     valid_results = [res for res in segment_results if res]
+    if not valid_results:
+        raise ValueError("No valid structured segments were extracted from the transcript.")
     
     # Hierarchical Reduce
     reduced_context = recursive_reduce(valid_results)
