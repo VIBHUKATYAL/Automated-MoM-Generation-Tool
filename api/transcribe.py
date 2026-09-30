@@ -10,9 +10,25 @@ app = Flask(__name__)
 @app.route('/', defaults={'path': ''}, methods=['GET', 'POST', 'OPTIONS'])
 @app.route('/<path:path>', methods=['GET', 'POST', 'OPTIONS'])
 def transcribe(path):
-    if 'audio' not in request.files:
-        return jsonify({'error': 'No audio file provided'}), 400
+    text_input = request.form.get('text')
     
+    if not text_input and 'audio' not in request.files:
+        return jsonify({'error': 'No audio file or text provided'}), 400
+        
+    sb = get_supabase()
+    
+    if text_input:
+        # Bypass AssemblyAI directly
+        response = sb.table("meetings").insert({
+            "title": "Text Transcript",
+            "original_transcript": text_input,
+            "processing_status": "transcribed"
+        }).execute()
+        return jsonify({
+            "status": "transcribed",
+            "meeting_id": response.data[0]['id']
+        })
+        
     file = request.files['audio']
     if file.filename == '':
         return jsonify({'error': 'No selected file'}), 400
