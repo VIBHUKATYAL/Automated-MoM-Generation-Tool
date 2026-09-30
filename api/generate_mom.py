@@ -30,8 +30,18 @@ def generate_mom(path):
     # Mark as processing
     sb.table("meetings").update({"processing_status": "generating"}).eq("id", meeting_id).execute()
     
+    title = meeting.get("title")
+    print(f"Triggering generation for {meeting_id} (Title: {title}).")
+    
     try:
-        final_mom = process_entire_transcript(transcript)
+        from lib.llm_pipeline import process_entire_transcript, process_single_shot_text
+        
+        if title == "Text Transcript":
+            # Bypass MAP REDUCE for pure text
+            final_mom = process_single_shot_text(transcript)
+        else:
+            # AssemblyAI outputs require mapping
+            final_mom = process_entire_transcript(transcript)
         
         # Save to DB
         sb.table("meetings").update({

@@ -54,7 +54,8 @@ def get_groq_llm():
     return init_chat_model("openai/gpt-oss-20b", model_provider="groq", groq_api_key=key)
 
 def get_gemini_llm():
-    return init_chat_model("gemini-3.5-flash", model_provider="google_genai")
+    from langchain_google_genai import ChatGoogleGenerativeAI
+    return ChatGoogleGenerativeAI(model="gemini-1.5-flash")
 
 def extract_json_content(content) -> dict:
     if isinstance(content, list):
@@ -254,3 +255,28 @@ def process_entire_transcript(raw_transcript: str) -> FinalMeetingMinutes:
     
     # Final Generation
     return execute_final_synthesis(reduced_context)
+
+def process_single_shot_text(raw_transcript: str) -> FinalMeetingMinutes:
+    """Bypasses complex map-reduce for clean, raw text input using Gemini's huge context window."""
+    print(f"[SINGLE-SHOT] Generating on raw text of length {len(raw_transcript)}")
+    llm = get_gemini_llm()
+    structured_llm = llm.with_structured_output(FinalMeetingMinutes)
+    
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", "You are an executive assistant. Analyze this meeting transcript and generate a structured summary. KEEP ALL actionable tasks and decisions. Never invent information."),
+        ("human", "Transcript:\n{transcript}")
+    ])
+    
+    chain = prompt | structured_llm
+    
+    try:
+        res = chain.invoke({"transcript": raw_transcript})
+        return res
+    except Exception as e:
+        print(f"[SINGLE-SHOT] Failed Gemini explicit generation: {e}")
+        # fallback to raw parsing if with_structured_output fails
+        fallback_chain = final_prompt | llm
+        fallback_res = fallback_chain.invoke({"context": "None provided", "reduced_context": raw_transcript})
+        data = extract_json_content(fallback_res.content)
+        return FinalMeetingMinutes.model_validate(data)
+
