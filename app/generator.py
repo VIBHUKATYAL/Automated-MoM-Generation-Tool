@@ -99,7 +99,7 @@ prompt = ChatPromptTemplate.from_messages([
     ( "human",human_prompt,),
 ])
 
-MAX_CHARS_PER_CHUNK = 12000
+MAX_CHARS_PER_CHUNK = 6000
 
 def chunk_transcript(transcript: str, max_chars: int = MAX_CHARS_PER_CHUNK) -> List[str]:
     if len(transcript) <= max_chars:
@@ -185,6 +185,9 @@ Your job is to:
 - Keep the exact meaning and flow of the conversation.
 - Retain the speaker labels (Speaker A: ...) exactly as they are.
 - Output ONLY the clean transcript text, without any additional comments or introductory text.
+
+CRITICAL INSTRUCTION:
+DO NOT SUMMARIZE. You MUST process and return every single line of the conversation. The output length should be nearly identical to the input length. If you condense or skip any part of the transcript, you will break the pipeline.
 """
 
 refine_human_prompt = """
