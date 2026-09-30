@@ -1,8 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
     const generateBtn = document.getElementById("generate-btn");
     const transcriptInput = document.getElementById("transcript-input");
-    const audioUpload = document.getElementById("audio-upload");
-    const fileName = document.getElementById("file-name");
+    const audioUpload = document.getElementById("audio-input");
 
     function toggleGenerateBtn() {
         const hasText = transcriptInput.value.trim().length > 0;
@@ -22,11 +21,9 @@ document.addEventListener("DOMContentLoaded", () => {
     transcriptInput.addEventListener("input", toggleGenerateBtn);
     audioUpload.addEventListener("change", (e) => {
         if (e.target.files.length > 0) {
-            fileName.textContent = e.target.files[0].name;
             transcriptInput.value = ""; 
             transcriptInput.disabled = true; 
         } else {
-            fileName.textContent = "";
             transcriptInput.disabled = false;
         }
         toggleGenerateBtn();
@@ -40,8 +37,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
 async function generateMOM() {
     const input = document.getElementById("transcript-input").value;
-    const fileInput = document.getElementById("audio-upload");
-    const resultDiv = document.getElementById("result");
+    const fileInput = document.getElementById("audio-input");
+    
+    const resultsContainer = document.getElementById("results-container");
     const loader = document.getElementById("loader");
 
     if (!input.trim() && fileInput.files.length === 0) {
@@ -51,7 +49,7 @@ async function generateMOM() {
 
     loader.className = "loader";
     loader.textContent = "Initiating Vercel Pipeline...";
-    resultDiv.innerHTML = "";
+    resultsContainer.className = "results-hidden"; 
 
     const formData = new FormData();
     if (fileInput.files.length > 0) {
@@ -99,7 +97,6 @@ async function generateMOM() {
 
         const genData = await genRes.json();
         if (genData.error) throw new Error(genData.error);
-        if (genData.error_message) throw new Error(genData.error_message);
         
         renderResults(genData.result);
         loader.textContent = "Completed!";
@@ -113,26 +110,49 @@ async function generateMOM() {
 }
 
 function renderResults(result) {
-    const resultDiv = document.getElementById("result");
     if (!result) return;
     
-    let html = `<div class="result-card"><h3>Meeting Summary</h3><p>${result.summary}</p></div>`;
+    document.getElementById("results-container").className = ""; 
+
+    document.getElementById("res-summary").textContent = result.summary || "";
     
-    if (result.key_points && result.key_points.length > 0) {
-        html += `<div class="result-card"><h3>Key Points</h3><ul>${result.key_points.map(h => `<li>${h}</li>`).join("")}</ul></div>`;
-    }
-    
-    if (result.decisions && result.decisions.length > 0) {
-        html += `<div class="result-card"><h3>Decisions</h3><ul>${result.decisions.map(d => `<li><strong>${d.decision || ""}</strong>: ${d.context || ""}</li>`).join("")}</ul></div>`;
-    }
-    
-    if (result.action_items && result.action_items.length > 0) {
-        html += `<div class="result-card"><h3>Action Items</h3><ul>${result.action_items.map(a => `<li><strong>${a.task || ""}</strong> - ${a.owner || "Unassigned"} (By: ${a.deadline || "No Date"})</li>`).join("")}</ul></div>`;
-    }
-    
-    if (result.next_meeting_scheduled) {
-         html += `<div class="result-card"><h3>Next Meeting</h3><p>${result.next_meeting_scheduled}</p></div>`;
+    const topicsList = document.getElementById("res-topics");
+    topicsList.innerHTML = "";
+    if (result.key_points) {
+        result.key_points.forEach(k => {
+            const li = document.createElement("li");
+            li.textContent = k;
+            topicsList.appendChild(li);
+        });
     }
 
-    resultDiv.innerHTML = html;
+    const decisionsList = document.getElementById("res-decisions");
+    decisionsList.innerHTML = "";
+    if (result.decisions) {
+        result.decisions.forEach(d => {
+            const li = document.createElement("li");
+            li.innerHTML = `<strong>${d.decision || ""}</strong>: ${d.context || ""}`;
+            decisionsList.appendChild(li);
+        });
+    }
+
+    const actionsList = document.getElementById("res-actions");
+    actionsList.innerHTML = "";
+    if (result.action_items) {
+        result.action_items.forEach(a => {
+            const li = document.createElement("li");
+            li.innerHTML = `<strong>${a.task || ""}</strong> - ${a.owner || "Unassigned"} (By: ${a.deadline || "No Date"})`;
+            actionsList.appendChild(li);
+        });
+    }
+
+    const qsList = document.getElementById("res-questions");
+    qsList.innerHTML = "";
+    if (result.open_questions) {
+        result.open_questions.forEach(q => {
+            const li = document.createElement("li");
+            li.textContent = q;
+            qsList.appendChild(li);
+        });
+    }
 }
