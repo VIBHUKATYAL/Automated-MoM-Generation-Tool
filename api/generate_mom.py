@@ -45,20 +45,24 @@ def generate_mom(path):
         
         import json
         
-        # Determine payload type to prevent syntax crashes
+        # Determine payload type to extract correctly
         if isinstance(final_mom, str):
-            mom_payload = json.loads(final_mom)
+            mom_dict = json.loads(final_mom)
         elif isinstance(final_mom, dict):
-            mom_payload = final_mom
+            mom_dict = final_mom
         else:
-            mom_payload = final_mom.model_dump()
+            mom_dict = final_mom.model_dump()
             
         sb.table("meetings").update({
             "processing_status": "completed",
-            "mom_json": mom_payload
+            "summary": mom_dict.get("summary", ""),
+            "key_points": mom_dict.get("key_points", mom_dict.get("key_topics", [])),
+            "decisions": mom_dict.get("decisions", []),
+            "action_items": mom_dict.get("action_items", []),
+            "next_meeting_scheduled": str(mom_dict.get("next_meeting_scheduled", "")) or str(mom_dict.get("open_questions", ""))
         }).eq("id", meeting_id).execute()
         
-        return jsonify({"status": "completed", "meeting_id": meeting_id, "result": mom_payload})
+        return jsonify({"status": "completed", "meeting_id": meeting_id, "result": mom_dict})
         
     except Exception as e:
         sb.table("meetings").update({
