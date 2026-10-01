@@ -1,0 +1,721 @@
+MEETING TITLE: Product Launch Planning and Q4 Strategy Meeting
+
+DATE: October 1, 2026
+
+SPEAKERS:
+Rahul – Product Manager
+Ananya – Engineering Lead
+Vikram – Backend Developer
+Neha – Frontend Developer
+Arjun – Marketing Lead
+Priya – UX Designer
+Sameer – QA Engineer
+Karan – Sales Lead
+
+--------------------------------------------------
+TRANSCRIPT
+--------------------------------------------------
+
+Rahul: Okay, I think we can start. We have quite a lot to cover today, so I'd like to keep this focused. The main objective is to finalize where we stand with the product launch, identify anything that's blocking engineering or marketing, and hopefully leave this meeting with actual owners for the remaining work. The current target is still October 28th, right?
+
+Ananya: From engineering's side, October 28th is still possible, but I wouldn't call it completely locked yet.
+
+Rahul: What exactly is preventing us from calling it locked?
+
+Ananya: There are three things. First, the recommendation engine is still producing inconsistent results for some users. Second, the dashboard has some performance problems when there are a lot of products loaded. And third, we haven't finished the integration testing with the payment service.
+
+Vikram: I would actually separate the recommendation engine issue from the dashboard issue. They're not related technically. The recommendation service is slow because we're making too many external calls.
+
+Neha: And the dashboard isn't just a backend problem. I've already optimized the API calls on the frontend. The biggest problem is that we're rendering almost everything at once.
+
+Vikram: Yeah, but the API is still returning too much data.
+
+Neha: That's because the API doesn't support pagination properly.
+
+Vikram: It does support pagination.
+
+Neha: It technically supports pagination, but the frontend doesn't get the total count correctly, so the infinite scroll breaks.
+
+Rahul: Okay, okay. Let's not spend ten minutes arguing about terminology. Can we agree that pagination needs to be fixed?
+
+Neha: Yes.
+
+Vikram: Yes.
+
+Rahul: Good. Who owns it?
+
+Neha: I can take the frontend side.
+
+Vikram: I'll fix the API response and total count.
+
+Rahul: Good. Can we have that by Friday?
+
+Vikram: Friday is okay.
+
+Neha: Same for me.
+
+Rahul: Let's put Friday, October 3rd.
+
+Sameer: Just one thing. If the API changes on Friday, QA needs the build before the end of the day, otherwise we can't actually test it until Monday.
+
+Ananya: That's fair. Vikram, can you get the backend change to staging by Friday afternoon?
+
+Vikram: Yes, I'll try to get it there by 3 PM.
+
+Rahul: Not "try". Is 3 PM realistic?
+
+Vikram: Yes. I'll have it on staging by 3 PM Friday.
+
+Rahul: Perfect.
+
+Sameer: Then QA can start Friday evening.
+
+Rahul: Good. That's one item.
+
+Arjun: Before we move on, I want to discuss the launch messaging because marketing is currently blocked on the final feature list. We've been using the feature list from two weeks ago and I know some things changed.
+
+Rahul: The final feature list should be almost the same.
+
+Arjun: "Almost" isn't enough for the website.
+
+Priya: Especially because the new onboarding flow is different from what we originally designed.
+
+Arjun: Exactly. The landing page copy currently says users can configure their preferences during signup, but that's not actually in the current onboarding flow.
+
+Neha: That's because we moved preference setup to after signup.
+
+Priya: And we did that because the original flow had too many steps.
+
+Rahul: So what should the website say?
+
+Arjun: It should say users can personalize recommendations after creating an account. That's accurate.
+
+Rahul: Fine. Update the copy.
+
+Arjun: I need the complete feature list before I finalize everything.
+
+Rahul: Ananya, can engineering provide the final feature list?
+
+Ananya: I can send a confirmed list tomorrow morning.
+
+Rahul: Tomorrow morning meaning?
+
+Ananya: Before 11 AM.
+
+Arjun: That works.
+
+Rahul: Good. Ananya owns final feature list, deadline October 2nd, 11 AM.
+
+Ananya: Correct.
+
+Priya: I also want to raise something about the onboarding screens. We removed two screens, but there is still an animation on the transition that isn't behaving properly on slower devices.
+
+Neha: That's not a blocker for launch.
+
+Priya: Maybe not for launch, but it makes the application feel broken.
+
+Sameer: I tested it on an older Android device and the animation dropped frames badly.
+
+Rahul: Is it a functional issue or a visual issue?
+
+Priya: Visual.
+
+Sameer: Mostly visual, but it can also cause the screen to freeze for about a second.
+
+Neha: That's because the animation is doing too much work on the main thread. I can replace it with a simpler transition.
+
+Rahul: How long?
+
+Neha: Half a day.
+
+Rahul: Do it.
+
+Neha: I'll include it with the pagination work.
+
+Rahul: Okay.
+
+Arjun: Coming back to marketing, we're also waiting on pricing. The current landing page says the basic plan is ₹499 per month, but I heard sales wants to test ₹399.
+
+Karan: That's not finalized.
+
+Rahul: Who is deciding pricing?
+
+Karan: The leadership team. Sales can give recommendations, but we haven't received a final number.
+
+Arjun: Then I can't publish the pricing page.
+
+Rahul: Fair. Let's mark pricing as pending leadership approval rather than pretending it's decided.
+
+Karan: Yes.
+
+Rahul: Karan, when do you expect a decision?
+
+Karan: I should know by Monday.
+
+Rahul: Monday, October 5th?
+
+Karan: Yes.
+
+Rahul: Okay. Karan owns pricing confirmation by October 5th.
+
+Karan: Got it.
+
+Sameer: I want to talk about payment testing because this is becoming a concern.
+
+Rahul: Go ahead.
+
+Sameer: We tested successful payments, but we haven't tested failed payments properly. We also haven't tested webhook retries.
+
+Vikram: The webhook handler supports retries.
+
+Sameer: The handler supports them, but I haven't validated the behavior.
+
+Vikram: That's fair.
+
+Sameer: Also, if the payment succeeds but the webhook arrives late, the frontend currently shows "Payment failed" for a few seconds.
+
+Rahul: That's bad.
+
+Vikram: I can change the frontend behavior so it shows "Payment processing" until we get confirmation.
+
+Neha: That's actually a frontend state issue. I can handle that.
+
+Vikram: Fine.
+
+Rahul: So Neha handles the payment status UI, and Vikram handles webhook reliability?
+
+Vikram: Yes.
+
+Sameer: And I'll create the test cases for successful payment, failed payment, delayed webhook, duplicate webhook, and webhook retry.
+
+Rahul: Excellent.
+
+Sameer: I need those changes in staging by October 7th.
+
+Vikram: That's doable.
+
+Neha: Yes.
+
+Rahul: Let's record October 7th as the testing milestone.
+
+Arjun: Another issue is analytics. We don't have enough tracking events for the launch campaign.
+
+Rahul: What exactly is missing?
+
+Arjun: Signup started, signup completed, recommendation viewed, product clicked, product added to cart, and purchase completed.
+
+Neha: Signup and purchase are already tracked.
+
+Arjun: Are they tracked correctly in production?
+
+Neha: I believe so.
+
+Arjun: "Believe" isn't enough.
+
+Neha: Okay, fair.
+
+Sameer: We can verify them.
+
+Rahul: Sameer, can QA validate analytics events?
+
+Sameer: Yes, but I'll need the event definitions.
+
+Arjun: I'll send the definitions.
+
+Rahul: When?
+
+Arjun: Today evening.
+
+Rahul: Okay. Arjun sends event definitions today. Sameer validates tracking by October 6th.
+
+Sameer: Works.
+
+Priya: I want to add a UX concern around the recommendation cards. We're currently showing three reasons why a product was recommended, but users may not understand what those reasons mean.
+
+Rahul: Can you give an example?
+
+Priya: Something like "high relevance score" isn't useful to a normal user. We should say something like "matches your preferred price range" or "similar to products you viewed."
+
+Arjun: I agree. That's much better for marketing too.
+
+Vikram: But generating natural-language reasons increases the processing cost.
+
+Ananya: We don't necessarily need to generate them dynamically. Some reasons can be based on predefined rules.
+
+Vikram: That would work.
+
+Rahul: Is this required for launch?
+
+Priya: I would say no, but it's a quality improvement.
+
+Rahul: Then let's not make it a launch blocker.
+
+Priya: Fine.
+
+Rahul: Put it into post-launch backlog.
+
+Arjun: Speaking of post-launch, do we have a plan for customer feedback?
+
+Karan: Sales can collect feedback from the first customers.
+
+Arjun: We should also have something inside the product.
+
+Neha: We can add a small feedback button.
+
+Priya: That would take maybe a day.
+
+Rahul: Not before launch.
+
+Neha: Agreed.
+
+Karan: I have another concern. Sales is expecting a demo environment, but I don't think we've discussed it.
+
+Rahul: What's required?
+
+Karan: A clean environment where we can demonstrate the product without using real customer data.
+
+Ananya: That's easy technically, but we'd need sample products and accounts.
+
+Vikram: We already have seed data.
+
+Karan: Is the seed data realistic enough for a customer demo?
+
+Vikram: Not really.
+
+Arjun: We can create a curated dataset.
+
+Rahul: Who can own that?
+
+Arjun: I can work with Vikram.
+
+Vikram: Sure.
+
+Rahul: Deadline?
+
+Arjun: October 9th.
+
+Rahul: Fine. Demo environment dataset by October 9th.
+
+Karan: Thanks.
+
+Ananya: I want to revisit the October 28 launch date. If payment integration and recommendation performance are both resolved this week, I think we're fine. But we haven't talked about load testing.
+
+Rahul: How much load are we expecting on launch day?
+
+Vikram: We don't have an exact number.
+
+Karan: Marketing is expecting around five thousand visitors on launch day.
+
+Vikram: Visitors aren't the same as concurrent users.
+
+Arjun: I know.
+
+Vikram: If we're talking five thousand total visitors, that's not particularly scary. If we get five hundred concurrent users hitting recommendations, that's different.
+
+Ananya: We should test for at least five hundred concurrent users.
+
+Vikram: I agree.
+
+Rahul: When can we do that?
+
+Vikram: After pagination and recommendation optimization are merged.
+
+Sameer: We should probably schedule it for October 12th.
+
+Ananya: That gives us enough time before launch.
+
+Rahul: October 12th load test.
+
+Vikram: Okay.
+
+Rahul: What happens if the system fails the load test?
+
+Ananya: Then we prioritize performance fixes over minor UI improvements.
+
+Priya: I'm okay with that.
+
+Arjun: Same.
+
+Rahul: Good.
+
+Priya: I also have a question about accessibility. We haven't tested keyboard navigation properly.
+
+Neha: That's true.
+
+Sameer: We did basic screen reader testing but not complete keyboard navigation.
+
+Rahul: Is accessibility part of the launch acceptance criteria?
+
+Ananya: Basic accessibility should be.
+
+Priya: I agree.
+
+Rahul: Define "basic."
+
+Priya: Keyboard navigation, visible focus states, button labels, form labels, and sufficient contrast.
+
+Neha: I can check those.
+
+Rahul: By when?
+
+Neha: October 8th.
+
+Rahul: Okay.
+
+Sameer: I'll verify after Neha completes it.
+
+Rahul: Great.
+
+Karan: One more sales concern. Customers are asking whether we'll support multiple currencies.
+
+Rahul: Do we?
+
+Vikram: The database supports it, but the UI only displays INR.
+
+Arjun: That's not something we should advertise.
+
+Karan: Can we at least support USD?
+
+Ananya: Not before launch.
+
+Rahul: Then we clearly state INR for the initial launch.
+
+Karan: Fine.
+
+Arjun: I'll make sure the website doesn't imply multi-currency support.
+
+Rahul: Good.
+
+Priya: What about mobile responsiveness?
+
+Neha: That's mostly done. There are some issues on tablets.
+
+Sameer: I found one issue where the recommendation cards overflow horizontally on an iPad-sized viewport.
+
+Neha: I know about that.
+
+Rahul: Is it fixed?
+
+Neha: Not yet.
+
+Rahul: Deadline?
+
+Neha: October 6th.
+
+Rahul: Okay.
+
+Sameer: I'll retest it October 7th.
+
+Rahul: Good.
+
+Arjun: I think marketing needs a final launch checklist too.
+
+Rahul: What does that include?
+
+Arjun: Website copy, pricing, screenshots, social media assets, email campaign, launch announcement, product demo video, and FAQ.
+
+Karan: Sales also needs a one-page product overview.
+
+Arjun: I can include that.
+
+Rahul: When can marketing have everything ready?
+
+Arjun: If pricing is confirmed Monday, I can finish the launch package by October 14th.
+
+Rahul: October 14th works.
+
+Karan: Great.
+
+Ananya: Engineering also needs a code freeze date.
+
+Rahul: What do you recommend?
+
+Ananya: October 21st.
+
+Vikram: That's aggressive.
+
+Ananya: It's necessary if we want a full week for stabilization.
+
+Sameer: I strongly prefer that.
+
+Rahul: Then October 21st is the code freeze.
+
+Vikram: Okay.
+
+Rahul: What happens between October 21st and October 28th?
+
+Sameer: Regression testing, bug fixes, deployment validation, monitoring setup, and final smoke tests.
+
+Ananya: Exactly.
+
+Priya: Can UX changes still happen after the freeze?
+
+Ananya: Only critical fixes.
+
+Rahul: Let's define the rule: after October 21st, only critical bugs and launch-blocking issues. No new features.
+
+Everyone: Agreed.
+
+Rahul: Good.
+
+Arjun: What about launch-day support?
+
+Karan: Sales can be online.
+
+Neha: Engineering should probably have someone on standby.
+
+Vikram: I'll be available.
+
+Ananya: I'll coordinate engineering.
+
+Sameer: QA can monitor production issues.
+
+Rahul: Fine. We'll create a launch-day support schedule next week.
+
+Priya: Are we doing a beta before launch?
+
+Rahul: I was going to ask that.
+
+Karan: Sales has five potential customers who could test it.
+
+Arjun: That's useful.
+
+Ananya: I'd prefer at least a small beta because there are things we can't discover internally.
+
+Sameer: We should give them a controlled environment.
+
+Rahul: When?
+
+Karan: October 16th.
+
+Ananya: That gives us five days before code freeze.
+
+Rahul: Okay. Beta starts October 16th.
+
+Karan: I'll coordinate the customers.
+
+Arjun: I'll prepare the feedback form.
+
+Priya: And I'll prepare a short usability questionnaire.
+
+Rahul: Good.
+
+Vikram: One technical concern with the beta. If customers use real data, we're going to have privacy concerns.
+
+Karan: They can use sample data.
+
+Rahul: Yes. No real sensitive customer information in the beta environment.
+
+Ananya: I'll make sure the environment is isolated.
+
+Rahul: Good.
+
+Sameer: I want to discuss monitoring.
+
+Rahul: Go ahead.
+
+Sameer: We need alerts for API errors, payment failures, recommendation latency, and database errors.
+
+Vikram: We have basic logs but no alerts.
+
+Ananya: We should set up monitoring before the code freeze.
+
+Rahul: Who owns it?
+
+Vikram: I can configure the technical alerts.
+
+Sameer: I'll define the QA thresholds.
+
+Rahul: Deadline?
+
+Vikram: October 15th.
+
+Rahul: Good.
+
+Arjun: Do we have an estimated budget for the launch campaign?
+
+Rahul: Not finalized.
+
+Arjun: Then I need that too.
+
+Karan: Sales doesn't own marketing budget.
+
+Rahul: I'll take that to leadership.
+
+Arjun: When?
+
+Rahul: Tomorrow.
+
+Arjun: Okay.
+
+Priya: I think we've covered most of the product issues. I want to make sure we don't forget documentation.
+
+Ananya: Engineering documentation is currently incomplete.
+
+Rahul: What exactly is missing?
+
+Ananya: API documentation, deployment instructions, and troubleshooting steps.
+
+Vikram: API docs are mostly there.
+
+Ananya: Mostly isn't enough.
+
+Vikram: Fair.
+
+Rahul: Can you complete it by October 13th?
+
+Vikram: Yes.
+
+Rahul: Good.
+
+Karan: Sales also needs basic troubleshooting information.
+
+Ananya: We can include common customer-facing problems.
+
+Arjun: I'll review that language.
+
+Rahul: Fine.
+
+Sameer: One final testing concern. We haven't tested account recovery.
+
+Neha: Password reset works.
+
+Sameer: Does it work if the reset link expires?
+
+Neha: I haven't tested that case.
+
+Sameer: I'll add it.
+
+Rahul: Is that launch blocking?
+
+Sameer: Potentially, yes.
+
+Ananya: Then it should be part of the acceptance test.
+
+Rahul: Agreed.
+
+Sameer: I'll test it by October 8th.
+
+Rahul: Good.
+
+Rahul: Let me summarize the major decisions so we're all aligned.
+
+First, the launch target remains October 28th, assuming the major engineering and payment issues are resolved.
+
+Second, October 21st is the code freeze.
+
+Third, after code freeze, only critical bugs and launch-blocking issues can be merged. No new features.
+
+Fourth, the beta will begin October 16th using an isolated environment with sample data.
+
+Fifth, the initial launch will support INR only. We will not advertise multi-currency support.
+
+Sixth, the recommendation-card explanation improvement is moved to the post-launch backlog.
+
+Seventh, pricing remains pending leadership approval and is not considered finalized yet.
+
+Does anyone disagree with those?
+
+Ananya: No.
+
+Vikram: No.
+
+Neha: No.
+
+Arjun: No.
+
+Priya: No.
+
+Sameer: No.
+
+Karan: No.
+
+Rahul: Great.
+
+Let's go through action items one last time.
+
+Vikram: API pagination fix and total-count correction by October 3rd, 3 PM staging.
+
+Neha: Frontend pagination fix by October 3rd, plus the onboarding animation improvement.
+
+Ananya: Final feature list by October 2nd at 11 AM.
+
+Arjun: Update website and launch messaging after receiving the final feature list.
+
+Karan: Pricing confirmation by October 5th.
+
+Neha: Payment status UI by October 7th.
+
+Vikram: Webhook reliability changes by October 7th.
+
+Sameer: Payment test cases and validation.
+
+Arjun: Analytics event definitions today.
+
+Sameer: Analytics validation by October 6th.
+
+Neha: Accessibility checks by October 8th.
+
+Sameer: Accessibility verification after that.
+
+Neha: Tablet responsiveness fix by October 6th.
+
+Sameer: Retest tablet responsiveness October 7th.
+
+Arjun and Vikram: Demo dataset by October 9th.
+
+Vikram: Load testing on October 12th.
+
+Neha: Account recovery edge-case fixes if needed after QA.
+
+Vikram: Monitoring and alerts by October 15th.
+
+Karan: Coordinate beta customers for October 16th.
+
+Arjun: Prepare beta feedback form.
+
+Priya: Prepare usability questionnaire.
+
+Vikram: Engineering documentation by October 13th.
+
+Rahul: Take marketing budget to leadership tomorrow.
+
+Arjun: Complete marketing launch package by October 14th, assuming pricing is confirmed.
+
+Rahul: Perfect.
+
+Karan: One question about the next meeting. Are we meeting Monday?
+
+Rahul: Yes, Monday at 11 AM.
+
+Priya: Is that October 5th?
+
+Rahul: Yes, October 5th at 11 AM.
+
+Sameer: Should QA bring the test results?
+
+Rahul: Yes. Bring the payment tests, analytics validation progress, and the current bug list.
+
+Ananya: Engineering will bring the recommendation performance numbers and API status.
+
+Vikram: I'll also bring the initial load-test preparation.
+
+Arjun: Marketing will bring the updated landing page copy.
+
+Karan: Sales will bring the list of beta customers.
+
+Rahul: Perfect.
+
+Anything else?
+
+Silence.
+
+Rahul: Okay, then we're done. Thanks everyone. Let's try not to create another twenty action items before Monday.
+
+Karan: No promises.
+
+Arjun: That's literally our job.
+
+Everyone: [laughs]
+
+Rahul: Meeting adjourned.

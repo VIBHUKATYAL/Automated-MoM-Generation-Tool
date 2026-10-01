@@ -13,6 +13,7 @@ from api.transcribe import app as transcribe_app
 from api.generate_mom import app as generate_app
 from api.meetings import app as meetings_app
 from api.health import app as health_app
+from api.history import app as history_app
 from flask import Flask, send_from_directory
 
 static_app = Flask(__name__)
@@ -25,7 +26,8 @@ application = DispatcherMiddleware(static_app, {
     '/api/transcribe': transcribe_app,
     '/api/generate_mom': generate_app,
     '/api/meetings': meetings_app,
-    '/api/health': health_app
+    '/api/health': health_app,
+    '/api/history': history_app
 })
 
 if __name__ == '__main__':

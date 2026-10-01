@@ -55,7 +55,7 @@ def get_groq_llm():
 
 def get_gemini_llm():
     from langchain_google_genai import ChatGoogleGenerativeAI
-    return ChatGoogleGenerativeAI(model="gemini-2.5-flash")
+    return ChatGoogleGenerativeAI(model="gemini-3.5-flash")
 
 def extract_json_content(content) -> dict:
     if isinstance(content, list):

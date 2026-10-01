@@ -33,7 +33,70 @@ document.addEventListener("DOMContentLoaded", () => {
     e.preventDefault();
     await generateMOM();
   });
+
+  const refreshHistoryBtn = document.getElementById("refresh-history-btn");
+  if (refreshHistoryBtn) {
+    refreshHistoryBtn.addEventListener("click", loadHistory);
+  }
+
+  // Load history on mount
+  loadHistory();
 });
+
+async function loadHistory() {
+  const container = document.getElementById("history-container");
+  if (!container) return;
+  container.innerHTML = `<p style="color: var(--text-secondary); font-size: 14px;">Loading...</p>`;
+
+  try {
+    const res = await fetch("/api/history");
+    if (!res.ok) throw new Error("Failed to load history");
+    const data = await res.json();
+
+    if (!data.history || data.history.length === 0) {
+      container.innerHTML = `<p style="color: var(--text-secondary); font-size: 14px;">No completed meetings found.</p>`;
+      return;
+    }
+
+    container.innerHTML = "";
+    data.history.forEach((mtg) => {
+      const el = document.createElement("div");
+      el.className =
+        "bg-white/5 rounded-lg p-3 border border-white/10 cursor-pointer hover:bg-white/10 transition flex justify-between items-center";
+      el.style =
+        "background: rgba(255,255,255,0.2); border-radius: 8px; padding: 12px; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; transition: all 0.2s;";
+
+      const date = new Date(mtg.created_at).toLocaleDateString([], {
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+      el.innerHTML = `
+        <span style="font-weight: 600; color: var(--text-primary); font-size: 15px;">${mtg.title || "Untitled Meeting"}</span>
+        <span style="font-size: 13px; color: var(--text-secondary);">${date}</span>
+      `;
+
+      el.addEventListener("click", () => {
+        document.getElementById("loader").textContent = "";
+        document.getElementById("loader").className = "loader-hidden";
+        // Convert to result schema explicitly
+        const json = mtg.mom_json;
+        if (json) {
+          if (!json.title) json.title = mtg.title; // Inject DB title
+          renderResults(json);
+          window.scrollTo({
+            top: document.getElementById("results-container").offsetTop,
+            behavior: "smooth",
+          });
+        }
+      });
+      container.appendChild(el);
+    });
+  } catch (err) {
+    container.innerHTML = `<p style="color: var(--danger); font-size: 14px;">Error: ${err.message}</p>`;
+  }
+}
 
 async function generateMOM() {
   const input = document.getElementById("transcript-input").value;
@@ -125,7 +188,7 @@ async function generateMOM() {
 function renderResults(result) {
   if (!result) return;
 
-  document.getElementById("results-container").className = "";
+  document.getElementById("results-container").className = "results-visible";
 
   document.getElementById("res-summary").textContent = result.summary || "";
 

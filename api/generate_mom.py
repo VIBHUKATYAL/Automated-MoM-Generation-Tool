@@ -43,21 +43,22 @@ def generate_mom(path):
             # AssemblyAI outputs require mapping
             final_mom = process_entire_transcript(transcript)
         
-        # Save to DB
+        import json
+        
+        # Determine payload type to prevent syntax crashes
+        if isinstance(final_mom, str):
+            mom_payload = json.loads(final_mom)
+        elif isinstance(final_mom, dict):
+            mom_payload = final_mom
+        else:
+            mom_payload = final_mom.model_dump()
+            
         sb.table("meetings").update({
             "processing_status": "completed",
-            "summary": final_mom.summary,
-            "key_points": final_mom.key_points,
-            "decisions": [d for d in final_mom.decisions],
-            "action_items": [a for a in final_mom.action_items],
-            "next_meeting_scheduled": final_mom.next_meeting_scheduled
+            "mom_json": mom_payload
         }).eq("id", meeting_id).execute()
         
-        return jsonify({
-            "status": "completed",
-            "meeting_id": meeting_id,
-            "result": final_mom.model_dump()
-        })
+        return jsonify({"status": "completed", "meeting_id": meeting_id, "result": mom_payload})
         
     except Exception as e:
         sb.table("meetings").update({

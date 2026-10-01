@@ -1,0 +1,1 @@
+{"error":"{'message': \"Could not find the table 'public.meetings' in the schema cache\", 'code': 'PGRST205', 'hint': None, 'details': None}"}
