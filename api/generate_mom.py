@@ -53,14 +53,20 @@ def generate_mom(path):
         else:
             mom_dict = final_mom.model_dump()
             
-        sb.table("meetings").update({
+        update_payload = {
             "processing_status": "completed",
             "summary": mom_dict.get("summary", ""),
             "key_points": mom_dict.get("key_points", mom_dict.get("key_topics", [])),
             "decisions": mom_dict.get("decisions", []),
             "action_items": mom_dict.get("action_items", []),
             "next_meeting_scheduled": str(mom_dict.get("next_meeting_scheduled", "")) or str(mom_dict.get("open_questions", ""))
-        }).eq("id", meeting_id).execute()
+        }
+        
+        # Inject the dynamically synthesized smart title!
+        if mom_dict.get("title"):
+            update_payload["title"] = mom_dict.get("title")
+            
+        sb.table("meetings").update(update_payload).eq("id", meeting_id).execute()
         
         return jsonify({"status": "completed", "meeting_id": meeting_id, "result": mom_dict})
         
