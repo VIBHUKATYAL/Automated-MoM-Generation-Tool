@@ -13,7 +13,7 @@ def generate_mom(path):
         return jsonify({"error": "Missing id parameter"}), 400
         
     sb = get_supabase()
-    res = sb.table("meetings").select("original_transcript", "processing_status").eq("id", meeting_id).execute()
+    res = sb.table("meetings").select("original_transcript", "processing_status", "title").eq("id", meeting_id).execute()
     
     if not res.data:
         return jsonify({"error": "Meeting not found"}), 404
